@@ -1,7 +1,7 @@
 # ZombieHouse
 James Perry on 02/12/2016:
 
-Procedural Level generation is almost done. 
+Procedural Level generation is almost done
 -Expect a 2D array of ints for the floor plan
 -Might make a constants class, not sure if it will be really necessary 
  
@@ -12,37 +12,37 @@ I'm going to create a GameState class that will get updated every time something
 Preliminary Plan (edit as you guys see fit):
 
 Audio:
--I (James) make custom audio files that deal with varying degrees of stereo effects. 
--Plan on finding the angle between a player's forward direction and a zombie position, and triggering the sound file for that range of angle.
--Player footsteps/running will be the same sound file no matter what, only the zombie sounds will need to trigger specific files.
+I (James) make custom audio files that deal with varying degrees of stereo effects. 
+Plan on finding the angle between a player's forward direction and a zombie position, and triggering the sound file for that range of angle.
+Player footsteps/running will be the same sound file no matter what, only the zombie sounds will need to trigger specific files.
 
 Level Generation
--I'll take care of all of this.
--Different map for each level (map topography won't play into difficulty, we'll use constraints on attributes and
+I'll take care of all of this.
+Different map for each level (map topography won't play into difficulty, we'll use constraints on attributes and
                                increase the number of zombies to do that)
--Like I said, 2D array of ints for 2D map.
--I take care of player start position and exit. They'll be stored in LevelGenerator.java if you need to access them for your classes.
+Like I said, 2D array of ints for 2D map.
+I take care of player start position and exit. They'll be stored in LevelGenerator.java if you need to access them for your classes.
 
 Zombie and Player class:
--Position
--Zombie class needs a euclidean distance and actual distance function
--Zombie class needs a makeDecision() method, with pathfinding to the player.
+Position
+Zombie class needs a euclidean distance and actual distance function
+Zombie class needs a makeDecision() method, with pathfinding to the player.
 
 
 
 
 GUI
--NO BUTTONS,PANELS,SLIDERS,LISTVIEWS,NONE OF THAT BULL****
--We do a canvas bound to the primary stage with attribute controls mapped to keyboard inputs
- and attribute values displayed overlaying the bottom of the screen (I'm sure you've seen some FPS that has done this).
+NO BUTTONS,PANELS,SLIDERS,LISTVIEWS,NONE OF THAT BULL****
+We do a canvas bound to the primary stage with attribute controls mapped to keyboard inputs
+and attribute values displayed overlaying the bottom of the screen (I'm sure you've seen some FPS that has done this).
  
  For instance, "p" increments player sight
                "o" to decraments player sight
                Press Spacebar to play
  
--GUI Threadworker class keeps track of keyboard input and update the attributes accordingly.
-  -Use a switch instead of a bunch of if statements (its faster).
-  -keyCodes, ya dig? 
+GUI Threadworker class keeps track of keyboard input and update the attributes accordingly.
+  Use a switch instead of a bunch of if statements (its faster).
+  keyCodes are the key to mapping. 
 -GUI main thread just has to render based on a constantly updating GameState object
 
 Start menu comes up first, and we'll have an outro to finish out the last level.
