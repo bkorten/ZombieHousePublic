@@ -6,8 +6,10 @@ public class LevelGenerator
   private int numRows = 20;
   private int numCols = 30;
   
-  private int exitRow;
-  private int exitCol;
+  private int exitRow1;
+  private int exitRow2;
+  private int exitCol1;
+  private int exitCol2;
   
   private int playerStartRow;
   private int playerStartCol;
@@ -81,8 +83,7 @@ public class LevelGenerator
         map[i][startCol-1] = WALL;
         map[i][colOffset] = WALL;
       }
-      System.out.println(startCol);
-      System.out.println(colOffset);
+      
       for(int i = startCol;i<=colOffset;i++)
       {
         map[startRow][i] = WALL; 
@@ -105,32 +106,44 @@ public class LevelGenerator
       case 0:
         //exit is going to be on the left side of the map
         point = rand.nextInt(numRows);  
-        exitRow = point;
-        if(exitRow>1) point2 = exitRow+1;
-        else point2 = exitRow-1;
-        exitCol = 0;
+        exitRow1 = point;
+        if(exitRow1>0) exitRow2 = exitRow1-1;
+        else exitRow2 = exitRow1+1;
+        exitCol1 = 0;
+        exitCol2 = 0;
         break;
       case 1:
         //exit is going to be on the top of the map 
         point = rand.nextInt(numCols);  
-        exitRow = 0;
-        exitCol = point;
+        exitRow1 = 0;
+        exitRow2 = 0;
+        exitCol1 = point;
+        if(exitCol1>0) exitCol2 = exitCol1-1;
+        else exitCol2 = exitCol1+1;
         break;
       case 2:
         //exit is going to be on the right side of the map  
         point = rand.nextInt(numRows);
-        exitRow = point;
-        exitCol = numCols-1;
+        exitRow1 = point;
+        if(exitRow1>0) exitRow2 = exitRow1-1;
+        else exitRow2 = exitRow1+1;
+        exitCol1 = numCols-1;
+        exitCol2 = numCols-1;
         break;
       //exit is going to be on the bottom of the map
       case 3:
         point = rand.nextInt(numCols);
-        exitRow = numRows-1;
-        exitCol = point;
+        exitRow1 = numRows-1;
+        exitRow2 = numRows-1;
+        exitCol1 = point;
+        if(exitCol1>0) exitCol2 = exitCol1-1;
+        else exitCol2 = exitCol1+1;
         break;
       }
     
-    map[exitRow][exitCol] = EXIT;
+    map[exitRow1][exitCol1] = EXIT;
+    map[exitRow2][exitCol2] = EXIT;
+    
     
   }
   
@@ -142,9 +155,9 @@ public class LevelGenerator
     double distance = 0;
     while(distance<10)
     {
-      double rowDistance = (exitRow-playerStartRow);  
+      double rowDistance = (exitRow1-playerStartRow);  
       rowDistance = Math.pow(rowDistance,2);
-      double colDistance = (exitCol-playerStartCol);
+      double colDistance = (exitCol1-playerStartCol);
       colDistance = Math.pow(colDistance,2);
       
       distance = Math.sqrt(rowDistance+colDistance);
