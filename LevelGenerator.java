@@ -99,14 +99,11 @@ public class LevelGenerator
   public void initializeExit()
   {
     int exit = rand.nextInt(4);
-    int point = 0;
-    int point2 = 0;
     switch(exit)
     {
       case 0:
         //exit is going to be on the left side of the map
-        point = rand.nextInt(numRows);  
-        exitRow1 = point;
+        exitRow1 = rand.nextInt(numRows);
         if(exitRow1>0) exitRow2 = exitRow1-1;
         else exitRow2 = exitRow1+1;
         exitCol1 = 0;
@@ -114,17 +111,15 @@ public class LevelGenerator
         break;
       case 1:
         //exit is going to be on the top of the map 
-        point = rand.nextInt(numCols);  
+        exitCol1 = rand.nextInt(numCols);  
         exitRow1 = 0;
         exitRow2 = 0;
-        exitCol1 = point;
         if(exitCol1>0) exitCol2 = exitCol1-1;
         else exitCol2 = exitCol1+1;
         break;
       case 2:
         //exit is going to be on the right side of the map  
-        point = rand.nextInt(numRows);
-        exitRow1 = point;
+        exitRow1 = rand.nextInt(numRows);
         if(exitRow1>0) exitRow2 = exitRow1-1;
         else exitRow2 = exitRow1+1;
         exitCol1 = numCols-1;
@@ -132,10 +127,9 @@ public class LevelGenerator
         break;
       //exit is going to be on the bottom of the map
       case 3:
-        point = rand.nextInt(numCols);
+        exitCol1 = rand.nextInt(numCols);
         exitRow1 = numRows-1;
         exitRow2 = numRows-1;
-        exitCol1 = point;
         if(exitCol1>0) exitCol2 = exitCol1-1;
         else exitCol2 = exitCol1+1;
         break;
