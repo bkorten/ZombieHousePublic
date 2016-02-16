@@ -27,10 +27,11 @@ Zombie and Player class:
 -Position
 -Zombie class needs a euclidean distance and actual distance function
 -Zombie class needs a makeDecision() method, with pathfinding to the player.
+-smell() function.
 
 GUI
--NO BUTTONS,PANELS,SLIDERS,LISTVIEWS,NONE OF THAT BULL****
--We do a canvas bound to the primary stage with attribute controls mapped to keyboard inputs
+-NO BUTTONS,PANELS,SLIDERS,LISTVIEWS,NONE OF THAT 
+-We do a canvas bound to the primary stage (maybe a layout if need be) with attribute controls mapped to keyboard inputs,
  and attribute values displayed overlaying the bottom of the screen (I'm sure you've seen some FPS that has done this).
  
  For instance, "p" increments player sight
