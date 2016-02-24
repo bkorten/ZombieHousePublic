@@ -3,10 +3,10 @@ import java.util.Random;
 //2/12/2016
 public class LevelGenerator 
 {
-  private int numRows = 25;
+  private int numRows = 40;
   public int getNumRows(){return this.numRows;}
   
-  private int numCols = 40;
+  private int numCols = 75;
   public int getNumCols(){return this.numCols;}  
   //exit is two tiles wide
   private int exitRow1;
@@ -15,12 +15,12 @@ public class LevelGenerator
   private int exitCol2;
   
   private int playerStartRow = 0;
+  public int getPlayerStartRow(){return this.playerStartRow;}
   private int playerStartCol = 0;
-  
-  private int numRooms = 4;
-  private int roomMinTiles = 25;
-  
-  private int numHallways = 6;
+  public int getPlayerStartCol(){return this.playerStartCol;}
+  private int numRooms = 15;
+
+
   private int numObstacles = 12;
   
 
@@ -170,13 +170,12 @@ public class LevelGenerator
         map[startRow][i] = WALL;
         map[rowOffset-1][i] = WALL;
       }
-      //if we hit the bottom case of the switch and we need to try a different 
-      //wall, it jumps out of the switch so we need a loop to make sure we make 
-      //an exit
+      //we need to make an exit     
       boolean exitFound = false;
-      int wallForExit = rand.nextInt(4);
+      int wallForExit;
       while(!exitFound)
       {  
+        wallForExit = rand.nextInt(4);
         switch(wallForExit)
         {
           //Let's put the exit on the left wall
@@ -185,6 +184,8 @@ public class LevelGenerator
           {
             int doorTile1 = startRow+rand.nextInt(roomRows-3)+1;
             int doorTile2 = doorTile1+1;
+            if(map[doorTile1][startCol-1] != 0 
+            || map[doorTile2][startCol-1] != 0) break;
             map[doorTile1][startCol] = 0;
             map[doorTile2][startCol] = 0;
             map[doorTile1][startCol-1] = 0;
@@ -199,6 +200,8 @@ public class LevelGenerator
           {
             int doorTile1 = startRow+rand.nextInt(roomRows-3)+1;
             int doorTile2 = doorTile1+1;
+            if(map[doorTile1][colOffset] != 0
+            || map[doorTile2][colOffset] != 0) break;
             map[doorTile1][colOffset-1] = 0;
             map[doorTile2][colOffset-1] = 0;
             map[doorTile1][colOffset] = 0;
@@ -213,6 +216,8 @@ public class LevelGenerator
           {
             int doorTile1 = startCol+rand.nextInt(roomCols-3)+1;
             int doorTile2 = doorTile1+1;
+            if(map[startRow-1][doorTile1] != 0 
+            || map[startRow-1][doorTile2] != 0) break;
             map[startRow][doorTile1] = 0;
             map[startRow][doorTile2] = 0;
             map[startRow-1][doorTile1] = 0;
@@ -227,6 +232,8 @@ public class LevelGenerator
           {
             int doorTile1 = startCol+rand.nextInt(roomCols-3)+1;
             int doorTile2 = doorTile1+1;
+            if(map[rowOffset][doorTile1] != 0 
+            || map[rowOffset][doorTile2] != 0) break;
             map[rowOffset-1][doorTile1] = 0;
             map[rowOffset-1][doorTile2] = 0;
             map[rowOffset][doorTile1] = 0;
@@ -301,33 +308,60 @@ public class LevelGenerator
   
   public void initializeStart()
   {
-
-    playerStartRow = rand.nextInt(numRows - 3) + 1;
-    playerStartCol = rand.nextInt(numCols - 3) + 1;
+    boolean exit = false;
     double distance = 0;
-    while (distance < 10) 
+    while(exit == false)  
     {
-      double rowDistance = (exitRow1 - playerStartRow);
-      rowDistance = Math.pow(rowDistance, 2);
-      double colDistance = (exitCol1 - playerStartCol);
-      colDistance = Math.pow(colDistance, 2);
-
-      distance = Math.sqrt(rowDistance + colDistance);
-      if (distance > 5 && map[playerStartRow][playerStartCol] != WALL) break;
-      else 
+      playerStartRow = 0;
+      playerStartCol = 0;
+      while(map[playerStartRow][playerStartCol] != FLOOR)
       {
         playerStartRow = rand.nextInt(numRows - 3) + 1;
         playerStartCol = rand.nextInt(numCols - 3) + 1;
       }
+      distance = 0;
+      double rowDistance = (exitRow1 - playerStartRow);
+      rowDistance = Math.pow(rowDistance, 2);
+      double colDistance = (exitCol1 - playerStartCol);
+      colDistance = Math.pow(colDistance, 2);
+      distance = Math.sqrt(rowDistance + colDistance);
+      if(distance>50) exit = true;
     }
-    if(map[playerStartRow][playerStartCol] != 0)
-    {
-      initializeStart();
-      return;
-    } 
     map[playerStartRow][playerStartCol] = PLAYER;
   }
-    
+  
+  public boolean isColEmpty(int col)
+  {
+    for(int i = 1;i<(numRows-1)/2;i++)
+    {
+      if(map[i][col] != 0) return false;
+    }
+    return true;
+  }
+  
+  public void initializeHalls() 
+  {
+    //find any places to bisect the map vertically
+    for(int i = 4;i<numCols-4;i++)
+    {
+      if(isColEmpty(i-3) 
+      && isColEmpty(i-2)
+      && isColEmpty(i-1)
+      && isColEmpty(i)
+      && isColEmpty(i+1)
+      && isColEmpty(i+2)
+      && isColEmpty(i+3))
+      {
+        for(int j = 1;j<numRows;j++)
+        {
+          if(map[j][i] == 0)  
+          {
+            map[j][i] = WALL;
+          }
+        }
+      } 
+    }
+  }
   
   public LevelGenerator()
   {
@@ -348,10 +382,13 @@ public class LevelGenerator
    
     initializeRooms();
     initializeExit();
+    //initializeHalls();
     initializeStart();
-    initializeObstacles();
+    //initializeObstacles();
   }
   
+  
+
   public static void main(String[] args)
   {
     LevelGenerator l = new LevelGenerator();	
