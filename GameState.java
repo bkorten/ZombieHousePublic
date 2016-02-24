@@ -46,7 +46,11 @@ public class GameState
   
   public GameState(int level, LevelGenerator levelGen)
   {
- 
+    playerCurrentRow = levelGen.getPlayerStartRow();
+    playerCurrentCol = levelGen.getPlayerStartCol();
+    floorPlan = levelGen.getMap();
+    numRows = levelGen.getNumRows();
+    numCols = levelGen.getNumCols();
     switch(level)
     {
       case 1:
@@ -105,9 +109,6 @@ public class GameState
       zombieSmell = 20.0;
       break;
     }
-    floorPlan = levelGen.getMap();
-    numRows = levelGen.getNumRows();
-    numCols = levelGen.getNumCols();
     Random rand = new Random();
     for(int i = 0;i<numRows;i++)
     {
@@ -120,16 +121,39 @@ public class GameState
           if(lineOrRandom<0.5)
           {
             lineZombieList.add(new LineZombie(i,j));
+            floorPlan[i][j] = ZombieConstants.ZOMBIE;
           }
           else
           {
             randZombieList.add(new RandomZombie(i,j));
+            floorPlan[i][j] = ZombieConstants.ZOMBIE;
           }
         } 
       }
     }
     
-   
+    int masterStartRow = 0;
+    int masterStartCol = 0;
+    boolean exitLoop = false;
+    while(!exitLoop)
+    {
+      masterStartRow = rand.nextInt(numRows-3)+1;
+      masterStartCol = rand.nextInt(numRows-3)+1;
+      if(floorPlan[masterStartRow][masterStartCol] != 0) continue;
+      double distance = 0;
+      double rowDistance = (masterStartRow - playerCurrentRow);
+      rowDistance = Math.pow(rowDistance, 2);
+      double colDistance = (masterStartCol - playerCurrentCol);
+      colDistance = Math.pow(colDistance, 2);
+      distance = Math.sqrt(rowDistance + colDistance);
+      if(distance>30) 
+      {
+        exitLoop = true;
+        floorPlan[masterStartRow][masterStartCol] = ZombieConstants.MASTER_ZOMBIE;
+      }
+    }
+    
+    
    
   }
   
