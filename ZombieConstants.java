@@ -4,6 +4,7 @@ public class ZombieConstants
 {
   public static final int FLOOR = 0;
   public static final int HALLWAY = 6;
+  public static final int OBSTACLE = 1;
   public static final int ROOM = 2;
   public static final int WALL = 4;
   public static final int PLAYER = 8;
