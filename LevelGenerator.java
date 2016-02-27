@@ -3,7 +3,7 @@ import java.util.Random;
 //2/12/2016
 public class LevelGenerator 
 {
-  private int numRows = 40;
+  private int numRows = 35;
   public int getNumRows(){return this.numRows;}
   
   private int numCols = 75;
@@ -25,7 +25,6 @@ public class LevelGenerator
   
 
   private final int FLOOR = 0;
-  private final int HALLWAY = 6;
   private final int ROOM = 2;
   private final int WALL = 4;
   private final int PLAYER = 8;
@@ -150,6 +149,9 @@ public class LevelGenerator
      
       //real estate isn't good 
       if(badArea == true) continue;  
+      
+      
+      
       //Okay, lets make a room
       for(int i = startRow;i<rowOffset;i++)
       {
@@ -175,6 +177,7 @@ public class LevelGenerator
       int wallForExit;
       while(!exitFound)
       {  
+        boolean twoExits = rand.nextBoolean();
         wallForExit = rand.nextInt(4);
         switch(wallForExit)
         {
@@ -186,10 +189,21 @@ public class LevelGenerator
             int doorTile2 = doorTile1+1;
             if(map[doorTile1][startCol-1] != 0 
             || map[doorTile2][startCol-1] != 0) break;
-            map[doorTile1][startCol] = 0;
-            map[doorTile2][startCol] = 0;
-            map[doorTile1][startCol-1] = 0;
-            map[doorTile2][startCol-1] = 0; 
+            map[doorTile1][startCol] = ZombieConstants.DOORWAY;
+            map[doorTile2][startCol] = ZombieConstants.DOORWAY;
+            map[doorTile1][startCol-1] = ZombieConstants.DOORWAY;
+            map[doorTile2][startCol-1] = ZombieConstants.DOORWAY; 
+            //add an extra exit to the right side
+            map[doorTile1][colOffset-1] = ZombieConstants.DOORWAY;
+            map[doorTile2][colOffset-1] = ZombieConstants.DOORWAY;
+            map[doorTile1][colOffset] = ZombieConstants.DOORWAY;
+            map[doorTile2][colOffset] = ZombieConstants.DOORWAY;
+            if(colOffset<numCols)
+            {
+              map[doorTile1][colOffset] = ZombieConstants.DOORWAY;
+              map[doorTile2][colOffset] = ZombieConstants.DOORWAY;
+            }
+            
             exitFound = true;
             break;
           }
@@ -202,10 +216,10 @@ public class LevelGenerator
             int doorTile2 = doorTile1+1;
             if(map[doorTile1][colOffset] != 0
             || map[doorTile2][colOffset] != 0) break;
-            map[doorTile1][colOffset-1] = 0;
-            map[doorTile2][colOffset-1] = 0;
-            map[doorTile1][colOffset] = 0;
-            map[doorTile2][colOffset] = 0;
+            map[doorTile1][colOffset-1] = ZombieConstants.DOORWAY;
+            map[doorTile2][colOffset-1] = ZombieConstants.DOORWAY;
+            map[doorTile1][colOffset] = ZombieConstants.DOORWAY;
+            map[doorTile2][colOffset] = ZombieConstants.DOORWAY;
             exitFound = true;
             break;
           }
@@ -218,10 +232,10 @@ public class LevelGenerator
             int doorTile2 = doorTile1+1;
             if(map[startRow-1][doorTile1] != 0 
             || map[startRow-1][doorTile2] != 0) break;
-            map[startRow][doorTile1] = 0;
-            map[startRow][doorTile2] = 0;
-            map[startRow-1][doorTile1] = 0;
-            map[startRow-1][doorTile2] = 0;
+            map[startRow][doorTile1] = ZombieConstants.DOORWAY;
+            map[startRow][doorTile2] = ZombieConstants.DOORWAY;
+            map[startRow-1][doorTile1] = ZombieConstants.DOORWAY;
+            map[startRow-1][doorTile2] = ZombieConstants.DOORWAY;
             exitFound = true;
             break;
           }
@@ -234,18 +248,28 @@ public class LevelGenerator
             int doorTile2 = doorTile1+1;
             if(map[rowOffset][doorTile1] != 0 
             || map[rowOffset][doorTile2] != 0) break;
-            map[rowOffset-1][doorTile1] = 0;
-            map[rowOffset-1][doorTile2] = 0;
-            map[rowOffset][doorTile1] = 0;
-            map[rowOffset][doorTile2] = 0;
+            map[rowOffset-1][doorTile1] = ZombieConstants.DOORWAY;
+            map[rowOffset-1][doorTile2] = ZombieConstants.DOORWAY;
+            map[rowOffset][doorTile1] = ZombieConstants.DOORWAY;
+            map[rowOffset][doorTile2] = ZombieConstants.DOORWAY;
+            if(twoExits == true)
+            {
+              //add an exit to the right wall if twoExits is true
+              if(startRow>numRows/2)
+              {
+                int col= (colOffset-2)-rand.nextInt(2);
+                map[startRow][col] = ZombieConstants.DOORWAY;
+                map[startRow][col-1] = ZombieConstants.DOORWAY;
+                map[startRow-1][col-1] = ZombieConstants.DOORWAY;
+                map[startRow-1][col] = ZombieConstants.DOORWAY;
+              }
+            }  
             exitFound = true;
             break;
           }
           else wallForExit = rand.nextInt(4);
         }
       }  
-      
-      
       numRooms--;    
     }
   
@@ -263,7 +287,7 @@ public class LevelGenerator
         if(exitRow1>0) exitRow2 = exitRow1-1;
         else exitRow2 = exitRow1+1;
         exitCol1 = 0;
-        exitCol2 = 0;
+        exitCol2 = 0;      
         break;
       case 1:
         //exit is going to be on the top of the map 
@@ -295,6 +319,28 @@ public class LevelGenerator
     map[exitRow2][exitCol2] = EXIT;
     
     
+  }
+  
+  public void expandHallways()
+  {
+    
+  }
+  public void truncateVerticalDoorWays()
+  {
+    for(int i = 2;i<numRows;i++)
+    {
+      for(int j = 1;j<numCols;j++)
+      {
+        if(map[i][j] == ZombieConstants.DOORWAY
+        && map[i+1][j]==ZombieConstants.DOORWAY
+        && map[i+2][j]!= ZombieConstants.WALL
+        && map[i-2][j]!= ZombieConstants.WALL)
+        {
+          map[i][j] = ZombieConstants.FLOOR;
+          map[i+1][j] = ZombieConstants.FLOOR;
+        } 
+      }
+    }
   }
   
   public void initializeObstacles()
@@ -339,28 +385,18 @@ public class LevelGenerator
     return true;
   }
   
-  public void initializeHalls() 
+  public boolean initializeHalls() 
   {
-    //find any places to bisect the map vertically
-    for(int i = 4;i<numCols-4;i++)
+    for(int i = 1;i<numRows-5;i+=5)
     {
-      if(isColEmpty(i-3) 
-      && isColEmpty(i-2)
-      && isColEmpty(i-1)
-      && isColEmpty(i)
-      && isColEmpty(i+1)
-      && isColEmpty(i+2)
-      && isColEmpty(i+3))
+      for(int j = 1;j<numCols-1;j++)
       {
-        for(int j = 1;j<numRows;j++)
-        {
-          if(map[j][i] == 0)  
-          {
-            map[j][i] = WALL;
-          }
-        }
-      } 
+       
+      }
+      
     }
+    
+    return false;
   }
   
   public LevelGenerator()
@@ -382,9 +418,19 @@ public class LevelGenerator
    
     initializeRooms();
     initializeExit();
-    //initializeHalls();
-    initializeStart();
     //initializeObstacles();
+    //initializeHalls();
+    //truncateVerticalDoorWays();
+    initializeStart();
+    for(int i = 0;i<numRows;i++)
+    {
+      for(int j = 0;j<numCols;j++)
+      {
+        if(map[i][j] == 3) map[i][j] = 0;
+      }
+    }
+    
+
   }
   
   
@@ -393,7 +439,7 @@ public class LevelGenerator
   {
     LevelGenerator l = new LevelGenerator();	
     l.printMap();
-
+    Graph g = new Graph(l.getMap());
   }
 
 }
