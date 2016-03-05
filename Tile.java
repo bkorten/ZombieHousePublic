@@ -1,4 +1,5 @@
 
+
 public class Tile implements Comparable<Tile>
 {
   private int row;
@@ -11,15 +12,22 @@ public class Tile implements Comparable<Tile>
   public void setPrevious(Tile x){this.previous = x;}
   private int type;
   public int getType(){return this.type;}
-  //movement cost fron startTile to this
-  private int g_value;
-  public int getGValue(){return this.g_value;}
-  public void setGValue(int x){this.g_value = x;}
-  //estimated cost from this to goal
-  private int h_value;
-  public int getHValue(){return this.h_value;}
-  public void setHValue(int x){this.h_value = x;}
+  public void setType(int x){this.type = x;}
   
+  private double f_value;
+  public double getFValue(){return this.f_value;}
+  public void setFValue(double x){this.f_value = x;}
+  private double g_value;
+  public double getGValue(){return this.g_value;}
+  public void setGValue(double x){this.g_value = x;}
+  
+  private double h_value;
+  public double getHValue(){return this.h_value;}
+  public void setHValue(double x){this.h_value = x;}
+  
+  private int pathMarker = 3;
+  public void setPathMarker(int x){this.pathMarker = x;}
+  public int getPathMarker(){return this.pathMarker;}
 
   public boolean equalsTile(Tile other)
   {
@@ -38,9 +46,9 @@ public class Tile implements Comparable<Tile>
   @Override
   public int compareTo(Tile o) 
   {
-    if(this.col > o.getCol()) return 1;
-    else if(this.row > o.getRow()) return 2;
-    else if(this.row < o.getRow()) return -1;
+    if(this.getFValue() > o.getFValue()) return 1;
+    else if(this.getFValue() < o.getFValue()) return -1;
+    else if(this.getFValue() == o.getFValue()) return 0;
     return 0;
   }
   
