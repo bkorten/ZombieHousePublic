@@ -54,6 +54,7 @@ public class GameState
   public GameState(int level)
   {
     LevelGenerator levelGen = new LevelGenerator();
+    levelGen.carveMap();
     rand = new Random();
     playerCurrentRow = levelGen.getPlayerStartRow();
     playerCurrentCol = levelGen.getPlayerStartCol();
@@ -68,7 +69,7 @@ public class GameState
       playerSpeed = 2.0;
       playerStamina = 5.0;
       playerRegen = 0.2;
-      zombieSpawn = 0.20;
+      zombieSpawn = 0.01;
       zombieSpeed = 0.5;
       zombieDecisionRate = 2.0;
       zombieSmell = 15.0;
@@ -79,7 +80,7 @@ public class GameState
       playerSpeed = 1.75;
       playerStamina = 4.0;
       playerRegen = 0.2;
-      zombieSpawn = 0.30;
+      zombieSpawn = 0.02;
       zombieSpeed = 0.65;
       zombieDecisionRate = 2.5;
       zombieSmell = 15.0;
@@ -90,7 +91,7 @@ public class GameState
       playerSpeed = 1.60;
       playerStamina = 3.0;
       playerRegen = 0.175;
-      zombieSpawn = 0.35;
+      zombieSpawn = 0.03;
       zombieSpeed = 0.75;
       zombieDecisionRate = 2.5;
       zombieSmell = 15.0;
@@ -101,7 +102,7 @@ public class GameState
       playerSpeed = 1.50;
       playerStamina = 2.5;
       playerRegen = 0.175;
-      zombieSpawn = 0.38;
+      zombieSpawn = 0.04;
       zombieSpeed = 0.85;
       zombieDecisionRate = 2.5;
       zombieSmell = 15.0;
@@ -112,7 +113,7 @@ public class GameState
       playerSpeed = 1.25;
       playerStamina = 2.0;
       playerRegen = 0.135;
-      zombieSpawn = 0.40;
+      zombieSpawn = 0.05;
       zombieSpeed = 1;
       zombieDecisionRate = 2.5;
       zombieSmell = 20.0;
@@ -122,7 +123,7 @@ public class GameState
     {
       for(int j = 0;j<numCols;j++)
       {
-        if (!levelGen.isInHallway(i, j)) continue;
+        if (levelGen.isInHallway(i, j)) continue;
         if(rand.nextFloat()<zombieSpawn)
         {
           float lineOrRandom = rand.nextFloat();
@@ -164,6 +165,19 @@ public class GameState
     graph = new Graph(floorPlan);
   }
   
+  public void printGraph()
+  {
+    for(int i = 0;i<ZombieConstants.NUM_ROWS;i++)
+    {
+      for(int j = 0;j<ZombieConstants.NUM_COLS;j++)
+      {
+        System.out.print(floorPlan[i][j]+" ");
+      }
+      System.out.println();
+    }
+  }
+  
+  
   public void makeZombieDecisions()
   {
     boolean alertMaster = false;
@@ -180,10 +194,58 @@ public class GameState
         newHeading = graph.getHeading();
         randZombieList.get(i).setHeadingRow(newHeading[0]);
         randZombieList.get(i).setHeadingCol(newHeading[1]);
+        alertMaster = true;
+      } 
+      else if(randZombieList.get(i).getCollided() == true)
+      {
+        int prevHeadingRow = randZombieList.get(i).getHeadingRow();
+        int prevHeadingCol = randZombieList.get(i).getHeadingCol();
+        randZombieList.get(i).randomizeHeading();
+        while(prevHeadingRow == randZombieList.get(i).getHeadingRow() &&
+              prevHeadingCol == randZombieList.get(i).getHeadingCol())
+        {
+          randZombieList.get(i).randomizeHeading();
+        }       
+      }
+      else 
+      {
+        randZombieList.get(i).randomizeHeading();
       }
       
     }
-    
+    for(int i = 0;i<lineZombieList.size();i++)
+    {
+      row = lineZombieList.get(i).getCurrentRow();
+      col = lineZombieList.get(i).getCurrentCol();
+      if(graph.euclideanDistance(playerCurrentRow, playerCurrentCol, row, col) <= zombieSmell)
+      {
+        graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
+        newHeading = graph.getHeading();
+        lineZombieList.get(i).setHeadingRow(newHeading[0]);
+        lineZombieList.get(i).setHeadingCol(newHeading[1]);
+        alertMaster = true;
+      }
+      else if(lineZombieList.get(i).getCollided() == true)
+      {
+        int prevHeadingRow = lineZombieList.get(i).getHeadingRow();
+        int prevHeadingCol = lineZombieList.get(i).getHeadingCol();
+        lineZombieList.get(i).randomizeHeading();
+        while(prevHeadingRow == randZombieList.get(i).getHeadingRow() &&
+              prevHeadingCol == randZombieList.get(i).getHeadingCol())
+        {
+          randZombieList.get(i).randomizeHeading();
+        }  
+      }
+    }
+    row = master.getCurrentRow();
+    col = master.getCurrentCol();
+    if(alertMaster == true || graph.euclideanDistance(playerCurrentRow, playerCurrentCol, row, col) <= zombieSmell)
+    {
+      graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
+      newHeading = graph.getHeading();
+      master.setHeadingRow(newHeading[0]);
+      master.setHeadingCol(newHeading[1]);
+    }   
   }
   
   
@@ -236,17 +298,15 @@ public class GameState
   }
   
   
-  public void initilizeBackupGame(GameState game,GameState duplicate)
+  public GameState backupGame(GameState game,GameState duplicate)
   {
-    
+    return null;
   }
   
   public static void main(String[] args)
   {
-    GameState game = new GameState(1); 
-    GameState duplicate = new GameState(1);
-    game.initilizeBackupGame(game,duplicate);
-    
+    GameState game = new GameState(1);
+    game.printGraph();
   }
   
 }
