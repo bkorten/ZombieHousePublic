@@ -1,284 +1,388 @@
-import java.util.Random;
 //James Perry
 //2/12/2016
-public class LevelGenerator 
+import java.util.ArrayList;
+import java.util.Collections;
+import java.util.Random;
+
+public class LevelGenerator
 {
-  private int numRows = 35;
-  public int getNumRows(){return this.numRows;}
+
+  private int numRows = ZombieConstants.NUM_ROWS;
+  private int numCols = ZombieConstants.NUM_COLS;
+  private int playerStartRow = 0;
+  public int getPlayerStartRow(){return this.playerStartRow;}
+  private int playerStartCol = 0;
+  public int getPlayerStartCol(){return this.playerStartCol;}
   
-  private int numCols = 75;
-  public int getNumCols(){return this.numCols;}  
   //exit is two tiles wide
   private int exitRow1;
   private int exitRow2;
   private int exitCol1;
   private int exitCol2;
   
-  private int playerStartRow = 0;
-  public int getPlayerStartRow(){return this.playerStartRow;}
-  private int playerStartCol = 0;
-  public int getPlayerStartCol(){return this.playerStartCol;}
-  private int numRooms = 15;
-
-
   private int numObstacles = 12;
+  private int numFireTraps = 3;
   
-
-  private final int FLOOR = 0;
-  private final int ROOM = 2;
-  private final int WALL = 4;
-  private final int PLAYER = 8;
-  private final int EXIT = 5;
   
-  private int[][] map;
-  private Random rand;
-  
-  public int[][] getMap(){return this.map;}
-  
-  public void printMap()
+  private int[][] graph = new int[numRows][numCols];
+  public int[][] getGraph(){return this.graph;}
+  private Random rand = new Random();
+  public void printGraph()
   {
     for(int i = 0;i<numRows;i++)
     {
       for(int j = 0;j<numCols;j++)
       {
-        System.out.print(map[i][j]+" ");	  
+        System.out.print(graph[i][j]+" ");
       }
       System.out.println();
-    }	  
+    }       
+  }
+  
+  public LevelGenerator()
+  {
+  for(int i = 0;i<numRows;i++)
+  {
+    for(int j = 0;j<numCols;j++)
+    {
+      graph[i][j] = 4;
+    }
+  } 
+    for(int i = 1;i<numRows-1;i++)
+    {
+      for(int j = 1;j<numCols-1;j++)
+      {
+        graph[i][j] = 0;
+      }
+    }   
+    
+  
+  }
+  public void carveRowFromLeft(int row)
+  {
+    int colPasses = rand.nextInt(2)+4;
+    for(int i = 1;i<numCols-1;i++)
+    {
+      graph[row][i] = 4;
+      if((graph[row-1][i] == 4) && (graph[row+1][i]==4))
+      {
+        colPasses--;
+      }
+      if(colPasses == 0) break;
+    }
+  }
+  
+  public void carveRowFromRight(int row)
+  {
+    int colPasses = rand.nextInt(2)+4;
+    for(int i = numCols-1;i>1;i--)
+    {
+      graph[row][i] = 4;
+      if((graph[row-1][i] == 4) && (graph[row+1][i]==4))
+      {
+        colPasses--;
+      }
+      if(colPasses == 0) break;
+    }
   }
   
   
-  public void initializeRooms()
-  {
-    while(numRooms>0)
-    {
-      //get width and height of room
-      int roomRows = rand.nextInt(4)+7;
-      int roomCols = rand.nextInt(4)+7;
-      //can't be a square room
-      while(roomRows == roomCols) roomCols = rand.nextInt(2)+7;
-      //top left corner of room
-      int startRow = rand.nextInt(numRows)+1;
-      int startCol = rand.nextInt(numCols)+1;
-      //bottom right corner of room
-      int rowOffset = startRow+roomRows;
-      int colOffset = startCol+roomCols;
-      //can't go off the map
-      if(rowOffset>(numRows-1)) continue;
-      else if(colOffset>(numCols-1)) continue;
-
-      //use this to see if we can't place a room 
-      //in a particular spot
-      boolean badArea = false;
-      //1: is the real estate empty?
-      for(int i = startRow;i<rowOffset;i++)
-      {
-        for(int j = startCol;j<colOffset;j++)
-        {
-          if(map[i][j] != FLOOR) badArea = true;
-              
-        }
-      }
-      
-      //Step 2: We can't place a room that leaves one or two tile gaps
-      //between itself and something else.
-      if(colOffset<numCols-1)
-      {
-        for(int i = startRow;i<rowOffset;i++)
-        {
-          if(map[i][colOffset] == 0)
-          {
-            if(map[i][colOffset+1] != 0)
-            { 
-              badArea = true;
-            }
-            else if(map[i][colOffset+2] != 0) badArea = true;
-          }
-        }  
-      }
-      
-      //continuation of step 2
-      if(rowOffset<=numRows-1)
-      {
-        for(int i = startCol;i<colOffset;i++)
-        {
-          if(map[rowOffset][i] == 0)
-          {
-            if(map[rowOffset+1][i] != 0) badArea = true;
-            else if((map[rowOffset+1][i] == 0) &&
-                     map[rowOffset+2][i] != 0) badArea = true;
-          }
-        }
-      }
-      //also step 2
-      if(startCol>1)
-      {
-        for(int i = startRow;i<rowOffset;i++)
-        {
-          if((map[i][startCol-1] == 0) && 
-             (map[i][startCol-2] != 0)) badArea = true;
-        }
-      }
-      //this is also part of step 2
-      if(startCol>2)
-      {
-        for(int i = startRow;i<rowOffset;i++)
-        {
-          if((map[i][startCol-1] == 0) && 
-             (map[i][startCol-2] == 0) && 
-              map[i][startCol-3] != 0) badArea = true;
-        }
-      }
-      //again, step 2
-      if(startRow>1)
-      {
-        for(int i = startCol;i<colOffset;i++)
-        {
-          if(map[startRow-1][i] == 0)
-          {
-            if(map[startRow-2][i] != 0) badArea = true;
-            else if(startRow>2)
-            {
-              if((map[startRow-2][i] == 0)
-               &&(map[startRow-3][i] !=0)) badArea = true;
-            }
-          }   
-          
-        }
-      }
-     
-      //real estate isn't good 
-      if(badArea == true) continue;  
-      
-      
-      
-      //Okay, lets make a room
-      for(int i = startRow;i<rowOffset;i++)
-      {
-        for(int j = startCol;j<colOffset;j++)
-        {
-          map[i][j] = ROOM;
-        }
-      }     
-      //the outermost cells become the wall
-      for(int i = startRow;i<rowOffset;i++)
-      {
-        map[i][startCol] = WALL;
-        map[i][colOffset-1] = WALL;
-      }
-      
-      for(int i = startCol;i<colOffset;i++)
-      {
-        map[startRow][i] = WALL;
-        map[rowOffset-1][i] = WALL;
-      }
-      //we need to make an exit     
-      boolean exitFound = false;
-      int wallForExit;
-      while(!exitFound)
-      {  
-        boolean twoExits = rand.nextBoolean();
-        wallForExit = rand.nextInt(4);
-        switch(wallForExit)
-        {
-          //Let's put the exit on the left wall
-          case 0:
-          if(startCol != 1)
-          {
-            int doorTile1 = startRow+rand.nextInt(roomRows-3)+1;
-            int doorTile2 = doorTile1+1;
-            if(map[doorTile1][startCol-1] != 0 
-            || map[doorTile2][startCol-1] != 0) break;
-            map[doorTile1][startCol] = ZombieConstants.DOORWAY;
-            map[doorTile2][startCol] = ZombieConstants.DOORWAY;
-            map[doorTile1][startCol-1] = ZombieConstants.DOORWAY;
-            map[doorTile2][startCol-1] = ZombieConstants.DOORWAY; 
-            //add an extra exit to the right side
-            map[doorTile1][colOffset-1] = ZombieConstants.DOORWAY;
-            map[doorTile2][colOffset-1] = ZombieConstants.DOORWAY;
-            map[doorTile1][colOffset] = ZombieConstants.DOORWAY;
-            map[doorTile2][colOffset] = ZombieConstants.DOORWAY;
-            if(colOffset<numCols)
-            {
-              map[doorTile1][colOffset] = ZombieConstants.DOORWAY;
-              map[doorTile2][colOffset] = ZombieConstants.DOORWAY;
-            }
-            
-            exitFound = true;
-            break;
-          }
-          else wallForExit = rand.nextInt(4);
-          //Exit on the right wall
-          case 1:
-          if(colOffset != numCols-1)
-          {
-            int doorTile1 = startRow+rand.nextInt(roomRows-3)+1;
-            int doorTile2 = doorTile1+1;
-            if(map[doorTile1][colOffset] != 0
-            || map[doorTile2][colOffset] != 0) break;
-            map[doorTile1][colOffset-1] = ZombieConstants.DOORWAY;
-            map[doorTile2][colOffset-1] = ZombieConstants.DOORWAY;
-            map[doorTile1][colOffset] = ZombieConstants.DOORWAY;
-            map[doorTile2][colOffset] = ZombieConstants.DOORWAY;
-            exitFound = true;
-            break;
-          }
-          else wallForExit = rand.nextInt(4);
-          //top wall
-          case 2:
-          if(startRow != 1)
-          {
-            int doorTile1 = startCol+rand.nextInt(roomCols-3)+1;
-            int doorTile2 = doorTile1+1;
-            if(map[startRow-1][doorTile1] != 0 
-            || map[startRow-1][doorTile2] != 0) break;
-            map[startRow][doorTile1] = ZombieConstants.DOORWAY;
-            map[startRow][doorTile2] = ZombieConstants.DOORWAY;
-            map[startRow-1][doorTile1] = ZombieConstants.DOORWAY;
-            map[startRow-1][doorTile2] = ZombieConstants.DOORWAY;
-            exitFound = true;
-            break;
-          }
-          else wallForExit = rand.nextInt(4);
-          //bottom wall
-          case 3:
-          if(rowOffset != numRows-1)
-          {
-            int doorTile1 = startCol+rand.nextInt(roomCols-3)+1;
-            int doorTile2 = doorTile1+1;
-            if(map[rowOffset][doorTile1] != 0 
-            || map[rowOffset][doorTile2] != 0) break;
-            map[rowOffset-1][doorTile1] = ZombieConstants.DOORWAY;
-            map[rowOffset-1][doorTile2] = ZombieConstants.DOORWAY;
-            map[rowOffset][doorTile1] = ZombieConstants.DOORWAY;
-            map[rowOffset][doorTile2] = ZombieConstants.DOORWAY;
-            if(twoExits == true)
-            {
-              //add an exit to the right wall if twoExits is true
-              if(startRow>numRows/2)
-              {
-                int col= (colOffset-2)-rand.nextInt(2);
-                map[startRow][col] = ZombieConstants.DOORWAY;
-                map[startRow][col-1] = ZombieConstants.DOORWAY;
-                map[startRow-1][col-1] = ZombieConstants.DOORWAY;
-                map[startRow-1][col] = ZombieConstants.DOORWAY;
-              }
-            }  
-            exitFound = true;
-            break;
-          }
-          else wallForExit = rand.nextInt(4);
-        }
-      }  
-      numRooms--;    
-    }
   
+  public void carveCol(int col)
+  {
+    for(int i = 1;i<numRows-1;i++)
+    {
+      graph[i][col] = 4;
+    }
+    
+  }
+  
+  
+  public void carveColFromTop(int col)
+  {
+    int rowPasses = rand.nextInt(2)+4;
+    for(int i = 1;i<numRows-1;i++)
+    {
+      graph[i][col] = 4;
+      if((graph[i-1][col] == 4) && (graph[i][col+1]==4))
+      {
+        rowPasses--;
+      }
+      if(rowPasses == 0) break;
+      
+    }
+    
+  }
+  public void carveColFromBottom(int col)
+  {
+    int rowPasses = rand.nextInt(2)+3;
+    for(int i = numRows-1;i>=1;i--)
+    {
+      graph[i][col] = 4;
+      if((graph[i-1][col] == 4) && (graph[i][col+1]==4))
+      {
+        rowPasses--;
+      }
+      if(rowPasses == 0) break;
+      
+    }
+    
+  }
+  public boolean isInHallway(int row, int col)
+  {
+    int westCount = 0;
+    int eastCount = 0;
+    int northCount = 0;
+    int southCount = 0;
+    while(graph[row][col-westCount] == 0) westCount++; 
+    while(graph[row][col+eastCount] == 0) eastCount++; 
+    while(graph[row-northCount][col] == 0) northCount++;
+    while(graph[row+southCount][col] == 0) southCount++;
+    if(westCount+eastCount == 4) return true;
+    if(northCount+southCount == 4) return true;
+    return false;
+  }
+  
+  public void clearBoxedAreas()
+  {
+    for(int i = 0;i<numRows-4;i++)
+    {
+      for(int j = 1;j<numCols-4;j++)
+      {
+        if(graph[i][j] == 4)
+        {
+          if(graph[i+1][j] == 4 &&
+             graph[i+2][j] == 4 &&
+             graph[i+3][j] == 4 &&
+             graph[i][j+1] == 4 &&
+             graph[i][j-1] == 4 &&
+             graph[i+4][j+1] == 4 &&
+             graph[i+4][j-1] == 4 
+             )
+          {
+            graph[i+1][j] = 0;
+            graph[i+2][j] = 0;
+            graph[i+3][j] = 0;
+          }
+        }
+      }
+    }
+  }
+  
+  public void clearVerticalParallelHalls()
+  {
+    for(int i = 1;i<numRows-13;i++)
+    {
+      for(int j = 1;j<numCols-1;j++)
+      {
+        if(graph[i][j] == 4 &&
+           graph[i+1][j] == 0 &&
+           graph[i+2][j] == 0 &&
+           graph[i+3][j] == 0 &&
+           graph[i+4][j] == 4 &&
+           graph[i+5][j] == 0 &&
+           graph[i+6][j] == 0 &&
+           graph[i+7][j] == 0 &&
+           graph[i+8][j] == 4 &&
+           graph[i+9][j] == 0 &&
+           graph[i+10][j] == 0 &&
+           graph[i+11][j] == 0)
+        {
+           graph[i+4][j] = 0;
+        }
+           
+      }
+    }
+  }
+  
+  public void clearHorizontalParallelHalls()
+  {
+    for(int i = 1;i<numRows-2;i++)
+    {
+      for(int j = 1;j<numCols-13;j++)
+      {
+        if(graph[i][j] == 4 &&
+           graph[i][j+1] == 0 &&
+           graph[i][j+2] == 0 &&
+           graph[i][j+3] == 0 &&
+           graph[i][j+4] == 4 &&
+           graph[i][j+5] == 0 &&
+           graph[i][j+6] == 0 &&
+           graph[i][j+7] == 0 &&
+           graph[i][j+8] == 4 &&
+           graph[i][j+9] == 0 &&
+           graph[i][j+10] == 0 &&
+           graph[i][j+11] == 0)
+        {
+           graph[i][j+4] = 0;
+        }
+           
+      }
+    }
+  }
+  
+  
+  public void bisectLargerVerticalAreas()
+  {
+    for(int i = 0;i<numRows-1;i++)
+    {
+      for(int j = 0;j<numCols-1;j++)
+      {
+        if(graph[i][j] == 4 &&
+           graph[i+1][j] == 4 &&
+           graph[i][j+1] != 4)
+        {
+          int count = 1;
+          while(graph[i+count][j+count] == 0)
+          {
+            count++;
+            
+          }
+          int splitCol;
+          if(count>10) splitCol = j+6;
+          else if(count>13) splitCol = j+8;
+          else continue;
+          int rowCounter = i;
+          while(graph[rowCounter][splitCol] == 0)
+          {
+            graph[rowCounter][splitCol] = 4;
+            rowCounter++;
+          }         
+        }
+           
+      }
+    }
+  }
+  
+  public boolean isFilled()
+  {
+    for(int i = 0;i<numRows;i++)
+    {
+      for(int j = 0;j<numCols;j++)
+      {
+        if(graph[i][j] == 0) return false;
+      }
+    }
+    
+    return true;
+  }
+  
+  public boolean isBadWall(int wall, int startRow, int startCol, int endRow, int endCol)
+  {
+    //north
+    if(wall == 1 && startRow == 0) return true;
+    //west
+    if(wall == 2 && startCol == 0) return true;
+    //south
+    if(wall == 3 && endRow == numRows-1) return true;
+    if(wall == 3 && endRow == numRows-2) return true;
+    //east
+    if(wall == 4 && endCol == numCols-1) return true;
+    if(wall == 4 && endCol == numCols-2) return true;
+    return false;
+  }
+  
+  public void initializeRoomDoorways()
+  {
+    while(!isFilled())
+    {
+      int row = rand.nextInt(numRows-2)+1;
+      int col = rand.nextInt(numCols-2)+1;
+      if(graph[row][col] != 0) continue;
+      int eastCounter = 0;
+      int westCounter = 0;
+      int northCounter = 0;
+      int southCounter = 0;
+      while(graph[row+northCounter][col] == 0) northCounter--;
+      while(graph[row+southCounter][col] == 0) southCounter++;
+      while(graph[row][col+westCounter] == 0) westCounter--;
+      while(graph[row][col+eastCounter] == 0) eastCounter++;
+      int startRow = row+northCounter;
+      int startCol = col+westCounter;
+      int endRow = startRow+(Math.abs(northCounter)+southCounter);
+      int endCol = startCol+(Math.abs(westCounter)+eastCounter);
+      
+      
+      int numExits = rand.nextInt(3)+1;
+      ArrayList<Integer> wallsUsed = new ArrayList<>();
+      while(numExits>0)
+      {
+        int wall = rand.nextInt(4)+1;
+        
+        if(wallsUsed.contains(wall)) wall = rand.nextInt(4)+1;
+       
+        while(isBadWall(wall,startRow,startCol,endRow,endCol)) wall = rand.nextInt(4)+1;
+        switch(wall)
+        {
+          //add an exit to the North wall
+          case 1:
+          int col1 = rand.nextInt(endCol-startCol-1)+startCol+1;
+          int col2;
+          if(col1<endCol-1) col2 = col1+1;
+          else col2 = col1-1;
+          graph[startRow][col1] = 6;
+          graph[startRow][col2] = 6;
+          wallsUsed.add(1);
+          numExits--;
+          break;
+          //add an exit to the West wall
+          case 2:
+          int row1 = rand.nextInt(endRow-startRow-1)+startRow+1;
+          int row2;
+          if(row1<endRow-1) row2= row1+1;
+          else row2 = row1-1;
+          graph[row1][startCol] = 6;
+          graph[row2][startCol] = 6;
+          wallsUsed.add(2);
+          numExits--;
+          break;
+          //add an exit to the South wall
+          case 3:
+          int southCol1 = rand.nextInt(endCol-startCol-1)+startCol+1;
+          int southCol2;
+          if(southCol1<endCol-1) southCol2 = southCol1+1;
+          else southCol2 = southCol1-1;
+          graph[endRow][southCol1] = 6;
+          graph[endRow][southCol2] = 6;
+          wallsUsed.add(3);
+          numExits--;
+          break;
+          //add an exit to the East wall
+          case 4:
+          int eastRow1 = rand.nextInt(endRow-startRow-1)+startRow+1;
+          int eastRow2;
+          if(eastRow1<endRow-1) eastRow2= eastRow1+1;
+          else eastRow2 = eastRow1-1;
+          graph[eastRow1][endCol] = 6;
+          graph[eastRow2][endCol] = 6;
+          wallsUsed.add(4);
+          numExits--;
+          break;   
+        }
+        
+      }
+      
+      for(int i = startRow+1;i<endRow;i++)
+      {
+        for(int j = startCol+1;j<endCol;j++)
+        {
+          graph[i][j] = 3;
+        }
+      }
+      graph[row][col] = 5;
+    }
+    
+    
+   
   }
   
   public void initializeExit()
   {
     int exit = rand.nextInt(4);
-    rand.setSeed(System.currentTimeMillis());
+    int adjRow1 = 0;
+    int adjCol1 = 0;
+    int adjRow2= 0;
+    int adjCol2 = 0;
     switch(exit)
     {
       case 0:
@@ -287,7 +391,11 @@ public class LevelGenerator
         if(exitRow1>0) exitRow2 = exitRow1-1;
         else exitRow2 = exitRow1+1;
         exitCol1 = 0;
-        exitCol2 = 0;      
+        exitCol2 = 0;  
+        adjRow1 = exitRow1;
+        adjRow2 = exitRow2;
+        adjCol1 = 1;
+        adjCol2 = 1;
         break;
       case 1:
         //exit is going to be on the top of the map 
@@ -296,6 +404,10 @@ public class LevelGenerator
         exitRow2 = 0;
         if(exitCol1>0) exitCol2 = exitCol1-1;
         else exitCol2 = exitCol1+1;
+        adjRow1 = 1;
+        adjRow2 = 1;
+        adjCol1 = exitCol1;
+        adjCol2 = exitCol2; 
         break;
       case 2:
         //exit is going to be on the right side of the map  
@@ -304,6 +416,10 @@ public class LevelGenerator
         else exitRow2 = exitRow1+1;
         exitCol1 = numCols-1;
         exitCol2 = numCols-1;
+        adjRow1 = exitRow1;
+        adjRow2 = exitRow2;
+        adjCol1 = numCols-2;
+        adjCol2 = numCols-2;
         break;
       //exit is going to be on the bottom of the map
       case 3:
@@ -312,43 +428,19 @@ public class LevelGenerator
         exitRow2 = numRows-1;
         if(exitCol1>0) exitCol2 = exitCol1-1;
         else exitCol2 = exitCol1+1;
+        adjRow1 = numRows-2;
+        adjRow2 = numRows-2;
+        adjCol1 = exitCol1;
+        adjCol2 = exitCol2;
+        
         break;
       }
     
-    map[exitRow1][exitCol1] = EXIT;
-    map[exitRow2][exitCol2] = EXIT;
+    graph[exitRow1][exitCol1] = ZombieConstants.EXIT;
+    graph[exitRow2][exitCol2] = ZombieConstants.EXIT;
+    graph[adjRow1][adjCol1] = 0;
+    graph[adjRow2][adjCol2] = 0;
     
-    
-  }
-  
-  public void expandHallways()
-  {
-    
-  }
-  public void truncateVerticalDoorWays()
-  {
-    for(int i = 2;i<numRows;i++)
-    {
-      for(int j = 1;j<numCols;j++)
-      {
-        if(map[i][j] == ZombieConstants.DOORWAY
-        && map[i+1][j]==ZombieConstants.DOORWAY
-        && map[i+2][j]!= ZombieConstants.WALL
-        && map[i-2][j]!= ZombieConstants.WALL)
-        {
-          map[i][j] = ZombieConstants.FLOOR;
-          map[i+1][j] = ZombieConstants.FLOOR;
-        } 
-      }
-    }
-  }
-  
-  public void initializeObstacles()
-  {
-    while(numObstacles>0)
-    {
-      numObstacles--;
-    }
     
   }
   
@@ -358,88 +450,191 @@ public class LevelGenerator
     double distance = 0;
     while(exit == false)  
     {
-      playerStartRow = 0;
-      playerStartCol = 0;
-      while(map[playerStartRow][playerStartCol] != FLOOR)
+      playerStartRow = rand.nextInt(numRows-3)+1;
+      playerStartCol = rand.nextInt(numRows-3)+1;
+      while(graph[playerStartRow][playerStartCol] != 0)
       {
         playerStartRow = rand.nextInt(numRows - 3) + 1;
         playerStartCol = rand.nextInt(numCols - 3) + 1;
       }
+      
+      if(!isInHallway(playerStartRow, playerStartCol)) continue;
       distance = 0;
       double rowDistance = (exitRow1 - playerStartRow);
       rowDistance = Math.pow(rowDistance, 2);
       double colDistance = (exitCol1 - playerStartCol);
       colDistance = Math.pow(colDistance, 2);
       distance = Math.sqrt(rowDistance + colDistance);
-      if(distance>50) exit = true;
+      int requiredDistance = 0;
+      if(exitCol1 == 0 || exitCol1 == numCols-1) requiredDistance = 60;
+      else requiredDistance = 36;
+      if(distance>requiredDistance) exit = true;
     }
-    map[playerStartRow][playerStartCol] = PLAYER;
+    graph[playerStartRow][playerStartCol] = 5;
   }
   
-  public boolean isColEmpty(int col)
+  public boolean isColFull(int col)
   {
-    for(int i = 1;i<(numRows-1)/2;i++)
+    for(int i = 0;i<numRows-1;i++)
     {
-      if(map[i][col] != 0) return false;
+      if(graph[i][col] != 4) return false;   
     }
     return true;
   }
   
-  public boolean initializeHalls() 
+  
+  public void breakFullCols()
   {
-    for(int i = 1;i<numRows-5;i+=5)
+    for(int i = 1;i<numCols-1;i++)
     {
-      for(int j = 1;j<numCols-1;j++)
+      if(isColFull(i))
       {
-       
+        int randRow = rand.nextInt(numRows-2);
+        int randRow2 = randRow+1;
+        graph[randRow][i] = 0;
+        graph[randRow2][i] = 0;
+      }
+    }
+  }
+  public void initializeObstacles()
+  {
+    while(numObstacles>0)
+    {
+      int row = rand.nextInt(numRows-8)+1;
+      int col = rand.nextInt(numCols-2)+1;
+      if(graph[row][col] != 0) continue;
+      if(graph[row-1][col] != 0 || graph[row-2][col] != 0) continue;
+      
+      int len = rand.nextInt(2)+4;
+      int count = 0;
+      int tmp = row;
+      while(graph[tmp][col] == 0 &&
+          graph[tmp][col-1] == 0 &&
+          graph[tmp][col+1] == 0 &&
+          graph[tmp][col-2] == 0 &&
+          graph[tmp][col+2] == 0)
+      {
+        count++;
+        tmp++;
+      }
+      if(graph[row+len][col] != 0 || graph[row+len+1][col] != 0) continue;
+      if(count >= len)
+      {
+        for(int i = row;i<row+len;i++)
+        {
+          graph[i][col] = 9;
+        }
+      }
+      else continue;  
+      numObstacles--;
+    }
+  }
+  public void initializeFireTraps()
+  {
+    while(numFireTraps>0)
+    {
+      int row = rand.nextInt(numRows-4)+1;
+      int col = rand.nextInt(numCols-2)+1;
+      if(graph[row][col] != 0) continue;
+      if(isInHallway(row,col)) continue;
+      
+      graph[row][col] = ZombieConstants.FIRE_TRAP;
+      graph[row+1][col] = ZombieConstants.FIRE_TRAP;
+      graph[row+2][col] = ZombieConstants.FIRE_TRAP;
+      
+      numFireTraps--;
+    }
+  }
+  
+  
+  public void carveMap()
+  {
+    ArrayList<Integer> rowCandidates = new ArrayList<>();
+    ArrayList<Integer> colCandidates = new ArrayList<>();
+
+    for(int i = 1;i<numRows-1;i++)
+    {
+      if(i%4 == 0) 
+      {
+        rowCandidates.add(i); 
       }
       
     }
-    
-    return false;
-  }
-  
-  public LevelGenerator()
-  {
-    map = new int[numRows][numCols];  
-    rand = new Random(System.currentTimeMillis()^50);
-    //rand = new Random(27);
-    for(int i = 0;i<numRows;i++)
+    for(int j = 1;j<numCols-1;j++)
     {
-      map[i][0] = WALL;
-      map[i][numCols-1] = WALL;
+      if(j%4 == 0)
+      {
+        colCandidates.add(j);
+      }
+    }
+    Collections.shuffle(rowCandidates);
+    Collections.shuffle(colCandidates);
+    int randomColBreaks = rand.nextInt(4)+7;
+    while(randomColBreaks>0)
+    {
+      int breakPoint = rand.nextInt(colCandidates.size());
+      while(breakPoint==0) breakPoint = rand.nextInt(colCandidates.size());
+      int topOrBottom = rand.nextInt(2);
+      if(topOrBottom == 1) carveColFromTop(colCandidates.get(breakPoint));
+      else carveColFromBottom(colCandidates.get(breakPoint));
+      colCandidates.remove(breakPoint);
+      randomColBreaks--;
     }
     
-    for(int i = 0;i<numCols;i++)
+    
+    int randomRowBreaks = rand.nextInt(3)+5;
+    while(randomRowBreaks>0)
     {
-      map[0][i] = WALL;
-      map[numRows-1][i] = WALL;
+      int breakPoint = rand.nextInt(rowCandidates.size());
+      while(breakPoint==0) breakPoint = rand.nextInt(rowCandidates.size());
+      
+      int leftOrRight = rand.nextInt(2);
+      if(leftOrRight == 1) carveRowFromLeft(rowCandidates.get(breakPoint));
+      else carveRowFromRight(rowCandidates.get(breakPoint));
+      rowCandidates.remove(breakPoint);
+      randomRowBreaks--;
     }
-   
-    initializeRooms();
-    initializeExit();
-    //initializeObstacles();
-    //initializeHalls();
-    //truncateVerticalDoorWays();
-    initializeStart();
+    clearBoxedAreas(); 
+    clearVerticalParallelHalls();
+    clearHorizontalParallelHalls();
+    bisectLargerVerticalAreas();
+    initializeRoomDoorways();
     for(int i = 0;i<numRows;i++)
     {
       for(int j = 0;j<numCols;j++)
       {
-        if(map[i][j] == 3) map[i][j] = 0;
+        if(graph[i][j] == 3 ||
+           graph[i][j] == 6 ||
+           graph[i][j] == 5) graph[i][j] = 0;
       }
     }
     
-
+    for(int i = 0;i<numRows;i++)
+    {
+      graph[i][0] = 4;
+      graph[i][numCols-1] = 4;
+    }
+    
+    for(int i = 0;i<numCols;i++)
+    {
+      graph[0][i] = 4;
+      graph[numRows-1][i] = 4;
+    }
+    
+    initializeExit();
+    initializeStart();
+    breakFullCols();
+    initializeObstacles();
+    initializeFireTraps();
   }
   
   
-
-  public static void main(String[] args)
+  public static void main(String[] args) 
   {
-    LevelGenerator l = new LevelGenerator();	
-    l.printMap();
-    Graph g = new Graph(l.getMap());
+      LevelGenerator g = new LevelGenerator();
+      g.carveMap();
+      g.printGraph();
+
   }
 
 }
