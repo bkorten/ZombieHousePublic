@@ -43,14 +43,14 @@ public class LevelGenerator
   {
     for(int j = 0;j<numCols;j++)
     {
-      graph[i][j] = 4;
+      graph[i][j] = ZombieConstants.WALL;
     }
   } 
     for(int i = 1;i<numRows-1;i++)
     {
       for(int j = 1;j<numCols-1;j++)
       {
-        graph[i][j] = 0;
+        graph[i][j] = ZombieConstants.FLOOR;
       }
     }   
     
@@ -61,8 +61,9 @@ public class LevelGenerator
     int colPasses = rand.nextInt(2)+4;
     for(int i = 1;i<numCols-1;i++)
     {
-      graph[row][i] = 4;
-      if((graph[row-1][i] == 4) && (graph[row+1][i]==4))
+      graph[row][i] = ZombieConstants.WALL;
+      if((graph[row-1][i] == ZombieConstants.WALL) && 
+         (graph[row+1][i]==ZombieConstants.WALL))
       {
         colPasses--;
       }
@@ -75,8 +76,9 @@ public class LevelGenerator
     int colPasses = rand.nextInt(2)+4;
     for(int i = numCols-1;i>1;i--)
     {
-      graph[row][i] = 4;
-      if((graph[row-1][i] == 4) && (graph[row+1][i]==4))
+      graph[row][i] = ZombieConstants.WALL;
+      if((graph[row-1][i] == ZombieConstants.WALL) &&
+         (graph[row+1][i]==ZombieConstants.WALL))
       {
         colPasses--;
       }
@@ -85,24 +87,15 @@ public class LevelGenerator
   }
   
   
-  
-  public void carveCol(int col)
-  {
-    for(int i = 1;i<numRows-1;i++)
-    {
-      graph[i][col] = 4;
-    }
-    
-  }
-  
-  
+
   public void carveColFromTop(int col)
   {
     int rowPasses = rand.nextInt(2)+4;
     for(int i = 1;i<numRows-1;i++)
     {
-      graph[i][col] = 4;
-      if((graph[i-1][col] == 4) && (graph[i][col+1]==4))
+      graph[i][col] = ZombieConstants.WALL;
+      if((graph[i-1][col] == ZombieConstants.WALL) &&
+         (graph[i][col+1]==4))
       {
         rowPasses--;
       }
@@ -116,8 +109,9 @@ public class LevelGenerator
     int rowPasses = rand.nextInt(2)+3;
     for(int i = numRows-1;i>=1;i--)
     {
-      graph[i][col] = 4;
-      if((graph[i-1][col] == 4) && (graph[i][col+1]==4))
+      graph[i][col] = ZombieConstants.WALL;
+      if((graph[i-1][col] == ZombieConstants.WALL) && 
+         (graph[i][col+1] == ZombieConstants.WALL))
       {
         rowPasses--;
       }
@@ -448,9 +442,9 @@ public class LevelGenerator
     double distance = 0;
     while(exit == false)  
     {
-      playerStartRow = rand.nextInt(numRows-3)+1;
-      playerStartCol = rand.nextInt(numRows-3)+1;
-      while(graph[playerStartRow][playerStartCol] != 0)
+      playerStartRow = rand.nextInt(numRows-3)+2;
+      playerStartCol = rand.nextInt(numRows-3)+2;
+      while(graph[playerStartRow][playerStartCol] != ZombieConstants.FLOOR)
       {
         playerStartRow = rand.nextInt(numRows - 3) + 1;
         playerStartCol = rand.nextInt(numCols - 3) + 1;
