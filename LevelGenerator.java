@@ -1,5 +1,3 @@
-//James Perry
-//2/12/2016
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -470,7 +468,7 @@ public class LevelGenerator
       else requiredDistance = 36;
       if(distance>requiredDistance) exit = true;
     }
-    graph[playerStartRow][playerStartCol] = 5;
+    graph[playerStartRow][playerStartCol] = ZombieConstants.PLAYER;
   }
   
   public boolean isColFull(int col)
