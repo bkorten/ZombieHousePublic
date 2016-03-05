@@ -1,9 +1,12 @@
 import java.util.ArrayList;
+import java.util.Iterator;
 import java.util.PriorityQueue;
 
 public class Graph 
 {
   private Tile[][] graph;
+  private int[] heading = new int[2];
+  public int[] getHeading(){return this.heading;}
   
   public void updatePosition(int prevRow, int prevCol, int newRow, int newCol, int value)
   {
@@ -31,7 +34,33 @@ public class Graph
     return Math.sqrt((rowDistance+colDistance));
   }
   
+  public void printGraph()
+  {
+    System.out.println();
+    for(int i = 0;i<ZombieConstants.NUM_ROWS;i++)
+    {
+      for(int j = 0;j<ZombieConstants.NUM_COLS;j++)
+      {
+        if(graph[i][j].getPathMarker() == 3) System.out.print("3"+" ");
+        else System.out.print(graph[i][j].getType()+" ");
+      }
+      System.out.println();
+    }
+  }
   
+  public void reconstructPath(int startRow, int startCol, int goalRow, int goalCol)
+  {
+    Tile tmp = graph[goalRow][goalCol];
+    Tile start = graph[startRow][startCol];
+    while(!(tmp.equalsTile(start)))
+    {
+      tmp.setType(3);
+      if(tmp.getPrevious().equalsTile(start)) break;
+      tmp = tmp.getPrevious();
+    };
+    heading[0] =Math.abs(start.getRow()-tmp.getRow());
+    heading[1] = Math.abs(start.getCol()-tmp.getCol());    
+  }
   
   public void pathFinding(int startRow,int startCol,int goalRow, int goalCol)
   {
@@ -41,7 +70,9 @@ public class Graph
       {
         graph[i][j].setPrevious(null);
         graph[i][j].setGValue(0);
+        graph[i][j].setFValue(0);
         graph[i][j].setHValue(0);
+        graph[i][j].setPathMarker(0);
       }
     }
     
@@ -49,35 +80,67 @@ public class Graph
     ArrayList<Tile> closedList = new ArrayList<>();
     Tile start = graph[startRow][startCol];
     Tile current;
-    start.setPrevious(start);
+    start.setPrevious(null);
     frontier.add(start);
-    int newCost;
-    
+    double newGScore, newHScore;
+    Tile adj;
     
     while(!frontier.isEmpty())
     {
       current = frontier.poll();
+      Iterator<Tile> it = frontier.iterator();
+      Tile tmp;
+      
       
       closedList.add(current);
-      if(current.equalsTile(graph[goalRow][goalCol])) return;
+      if(current.equalsTile(graph[goalRow][goalCol])) 
+      {
+        graph[goalRow][goalCol].setPrevious(current);
+        graph[startRow][startCol].setPrevious(null);
+        reconstructPath(startRow,startCol,goalRow,goalCol);
+        graph[goalRow][goalCol].setType(1);
+        printGraph();
+        return;
+      }
       
       ArrayList<Tile> neighbors = getNeighbors(current.getRow(),current.getCol());
       
       for(int i = 0;i<neighbors.size();i++)
       {
-        
-        if(closedList.contains(neighbors.get(i))) continue;
-        
-        else if(!(frontier.contains(neighbors.get(i))))
-        { 
-         Tile tmp = neighbors.get(i);
-         frontier.add(neighbors.get(i));
-         newCost = current.getGValue()+neighbors.get(i).getType()+1;
+        adj = neighbors.get(i);
+        if(adj.getType() == ZombieConstants.WALL) continue;
+        newGScore = current.getGValue()+adj.getType()+1;
+        if(adj.equalsTile(graph[goalRow][goalCol]))
+        {
+          adj.setPrevious(current);
+          reconstructPath(startRow,startCol,goalRow,goalCol);
+          printGraph();
+          return;
         }
         
-        else if(frontier.contains(neighbors.get(i)))
-        {
+        if(closedList.contains(adj) && newGScore > adj.getGValue()) continue;
+        
+        else if(!(frontier.contains(adj)) || newGScore<adj.getGValue())
+        { 
           
+          newHScore = euclideanDistance(adj.getRow(),adj.getCol(),goalRow,goalCol);
+          adj.setFValue(newGScore+newHScore);
+          adj.setGValue(newGScore);
+          adj.setHValue(newHScore);
+          adj.setPrevious(current);
+          if(!(frontier.contains(adj))) frontier.add(adj);
+        }
+        
+        else if(frontier.contains(adj))
+        {
+          newGScore = current.getGValue()+adj.getType()+1;
+          newHScore = euclideanDistance(adj.getRow(),adj.getCol(),goalRow,goalCol);
+          if((newGScore+newHScore)<adj.getFValue())
+          {
+            adj.setFValue(newGScore+newHScore);
+            adj.setGValue(newGScore);
+            adj.setPrevious(current);
+          }
         }  
         
       }  
@@ -96,8 +159,11 @@ public class Graph
         graph[i][j] = new Tile(i,j,floorPlan[i][j]);
       }
     }
-    
-    pathFinding(1,1,2,2);
-    
   }
+  public static void main(String[] args)
+  {
+    LevelGenerator l = new LevelGenerator();
+    Graph g = new Graph(l.getGraph());
+  }
+  
 }
