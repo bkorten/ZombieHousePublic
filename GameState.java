@@ -166,6 +166,23 @@ public class GameState
   
   public void makeZombieDecisions()
   {
+    boolean alertMaster = false;
+    int row;
+    int col;
+    int[] newHeading;
+    for(int i = 0;i<randZombieList.size();i++)
+    {
+      row = randZombieList.get(i).getCurrentRow();
+      col = randZombieList.get(i).getCurrentCol();
+      if(graph.euclideanDistance(playerCurrentRow, playerCurrentCol, row, col) <= zombieSmell)
+      {
+        graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
+        newHeading = graph.getHeading();
+        randZombieList.get(i).setHeadingRow(newHeading[0]);
+        randZombieList.get(i).setHeadingCol(newHeading[1]);
+      }
+      
+    }
     
   }
   
@@ -222,7 +239,6 @@ public class GameState
   
   public static void main(String[] args)
   {
-    LevelGenerator lg = new LevelGenerator();
     GameState game = new GameState(1); 
     GameState duplicate = new GameState(1);
     game.initilizeBackupGame(game,duplicate);
@@ -230,4 +246,3 @@ public class GameState
   }
   
 }
-
