@@ -204,6 +204,10 @@ public class GameState
         floorPlan[nextRow][nextCol] = ZombieConstants.RANDOM_ZOMBIE;
         floorPlan[row][col] = 0;
       }
+      else if(floorPlan[nextRow][nextCol] != 0)
+      {
+        randZombieList.get(i).setCollided(true);
+      }
     }
     
     for(int i = 0;i<lineZombieList.size();i++)
