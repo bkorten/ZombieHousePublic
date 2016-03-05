@@ -5,6 +5,13 @@ public class Graph
 {
   private Tile[][] graph;
   
+  public void updatePosition(int prevRow, int prevCol, int newRow, int newCol, int value)
+  {
+    graph[prevRow][prevCol].setType(0);
+    graph[newRow][newCol].setType(value);
+   
+  }
+  
   public ArrayList<Tile> getNeighbors(int row, int col)
   {
     ArrayList<Tile> tiles = new ArrayList<>();
