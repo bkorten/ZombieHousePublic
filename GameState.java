@@ -7,50 +7,59 @@ public class GameState
   private ArrayList<RandomZombie> randZombieList = new ArrayList<>();
   private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
   private int[][] floorPlan;
+  public int[][] getFloorPlan(){return this.floorPlan;}
+  
   private int playerSight;
   private int playerHearing;
   private double playerSpeed;
   private double playerStamina;
   private double playerRegen;
   private double zombieSpawn;
-  private double zombieSpeed;
-  private double zombieSmell;
-  private double zombieDecisionRate;
+  private static double zombieSpeed;
+  private static double zombieSmell;
+  private static double zombieDecisionRate;
   private int currentLevel;
+  
+  private MasterZombie master;
   
   private int playerCurrentRow;
   private int playerCurrentCol;
   private int numRows;
   private int numCols;
+  private Random rand;
   
+  private Graph graph;
   
-  public void setPlayerSight(int sight){this.playerSight = sight;}
+  public synchronized void setPlayerSight(int sight){this.playerSight = sight;}
   public int getPlayerSight(){return this.playerSight;}
   
-  public void setPlayerHearing(int hear){this.playerHearing = hear;}
+  public synchronized void setPlayerHearing(int hear){this.playerHearing = hear;}
   public int getPlayerHearing(){return this.playerHearing;}
   
-  public void setPlayerSpeed(double speed){this.playerSpeed = speed;}
+  public synchronized void setPlayerSpeed(double speed){this.playerSpeed = speed;}
   public double getPlayerSpeed(){return this.playerSpeed;}
   
-  public void setPlayerStamina(double stamina){this.playerStamina = stamina;}
+  public synchronized void setPlayerStamina(double stamina){this.playerStamina = stamina;}
   public double getPlayerStamina(){return this.playerStamina;}
   
-  public void setPlayerRegen(double regen){this.playerRegen = regen;}
+  public synchronized void setPlayerRegen(double regen){this.playerRegen = regen;}
   public double getPlayerRegen(){return this.playerRegen;}
   
   public int getPlayerCurrentRow(){return this.playerCurrentRow;}
   public int getPlayerCurrentCol(){return this.playerCurrentCol;}
   
+  public double getZombieDecisionRate(){return this.zombieDecisionRate;}
+  public void setZombieDecisionRate(double x){this.zombieDecisionRate = x;}
   
-  
-  public GameState(int level, LevelGenerator levelGen)
+  public GameState(int level)
   {
+    LevelGenerator levelGen = new LevelGenerator();
+    rand = new Random();
     playerCurrentRow = levelGen.getPlayerStartRow();
     playerCurrentCol = levelGen.getPlayerStartCol();
-    floorPlan = levelGen.getMap();
-    numRows = levelGen.getNumRows();
-    numCols = levelGen.getNumCols();
+    floorPlan = levelGen.getGraph();
+    numRows = ZombieConstants.NUM_ROWS;
+    numCols = ZombieConstants.NUM_COLS;
     switch(level)
     {
       case 1:
@@ -109,29 +118,27 @@ public class GameState
       zombieSmell = 20.0;
       break;
     }
-    Random rand = new Random();
     for(int i = 0;i<numRows;i++)
     {
       for(int j = 0;j<numCols;j++)
       {
-        if (floorPlan[i][j] != ZombieConstants.ROOM) continue;
+        if (!levelGen.isInHallway(i, j)) continue;
         if(rand.nextFloat()<zombieSpawn)
         {
           float lineOrRandom = rand.nextFloat();
           if(lineOrRandom<0.5)
           {
             lineZombieList.add(new LineZombie(i,j));
-            floorPlan[i][j] = ZombieConstants.ZOMBIE;
+            floorPlan[i][j] = ZombieConstants.LINE_ZOMBIE;
           }
           else
           {
             randZombieList.add(new RandomZombie(i,j));
-            floorPlan[i][j] = ZombieConstants.ZOMBIE;
+            floorPlan[i][j] = ZombieConstants.RANDOM_ZOMBIE;
           }
         } 
       }
     }
-    
     int masterStartRow = 0;
     int masterStartCol = 0;
     boolean exitLoop = false;
@@ -149,20 +156,78 @@ public class GameState
       if(distance>30) 
       {
         exitLoop = true;
+        master = new MasterZombie(masterStartRow,masterStartCol);
         floorPlan[masterStartRow][masterStartCol] = ZombieConstants.MASTER_ZOMBIE;
+      }
+    }  
+    
+    graph = new Graph(floorPlan);
+  }
+  
+  public void makeZombieDecisions()
+  {
+    
+  }
+  
+  
+  public void moveZombies()
+  {
+    int row;
+    int col;
+    int nextRow;
+    int nextCol;
+    for(int i = 0;i<randZombieList.size();i++)
+    {
+      row = randZombieList.get(i).getCurrentRow();
+      col = randZombieList.get(i).getCurrentCol();
+      nextRow = randZombieList.get(i).getHeadingRow();
+      nextCol = randZombieList.get(i).getHeadingCol();
+      if(floorPlan[nextRow][nextCol] == 0)
+      {
+        floorPlan[nextRow][nextCol] = ZombieConstants.RANDOM_ZOMBIE;
+        floorPlan[row][col] = 0;
       }
     }
     
+    for(int i = 0;i<lineZombieList.size();i++)
+    {
+      row = lineZombieList.get(i).getCurrentRow();
+      col = lineZombieList.get(i).getCurrentCol();
+      nextRow = lineZombieList.get(i).getHeadingRow();
+      nextCol = lineZombieList.get(i).getHeadingCol();
+      if(floorPlan[nextRow][nextCol] == 0)
+      {
+        floorPlan[nextRow][nextCol] = ZombieConstants.LINE_ZOMBIE;
+        floorPlan[row][col] = 0;
+      }
+    }
     
-   
+    row = master.getCurrentRow();
+    col = master.getCurrentCol();
+    nextRow = master.getHeadingRow();
+    nextCol = master.getHeadingCol();
+    if(floorPlan[nextRow][nextCol] == 0)
+    {
+      floorPlan[nextRow][nextCol] = ZombieConstants.MASTER_ZOMBIE;
+      floorPlan[row][col] = 0;
+    }
+    
   }
   
+  
+  public void initilizeBackupGame(GameState game,GameState duplicate)
+  {
+    
+  }
   
   public static void main(String[] args)
   {
     LevelGenerator lg = new LevelGenerator();
-    GameState game = new GameState(1,lg); 
+    GameState game = new GameState(1); 
+    GameState duplicate = new GameState(1);
+    game.initilizeBackupGame(game,duplicate);
     
   }
   
 }
+
