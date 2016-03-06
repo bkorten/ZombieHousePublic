@@ -2,6 +2,7 @@ import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
 
+
 public class LevelGenerator
 {
 
@@ -563,6 +564,7 @@ public class LevelGenerator
   }
   
   
+  
   public void carveMap()
   {
     ArrayList<Integer> rowCandidates = new ArrayList<>();
@@ -598,7 +600,7 @@ public class LevelGenerator
     }
     
     
-    int randomRowBreaks = rand.nextInt(3)+5;
+    int randomRowBreaks = rand.nextInt(3)+6;
     while(randomRowBreaks>0)
     {
       int breakPoint = rand.nextInt(rowCandidates.size());
