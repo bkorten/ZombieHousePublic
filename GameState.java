@@ -13,11 +13,17 @@ public class GameState
   private int playerHearing;
   private double playerSpeed;
   private double playerStamina;
+  private double maxStamina;
   private double playerRegen;
   private double zombieSpawn;
   private static double zombieSpeed;
   private static double zombieSmell;
   private static double zombieDecisionRate;
+  
+  private double cameraAngle;
+  public void setCameraAngle(double b){this.cameraAngle = b;}
+  
+  
   private int currentLevel;
   
   private MasterZombie master;
@@ -26,6 +32,9 @@ public class GameState
   private int playerCurrentCol;
   private int numRows;
   private int numCols;
+  
+  private boolean isPlayerRunning = false;
+  
   private Random rand;
   
   private Graph graph;
@@ -100,7 +109,7 @@ public class GameState
       playerSight = 3;
       playerHearing = 10;
       playerSpeed = 1.50;
-      playerStamina = 2.5;
+      playerStamina = 2.0;
       playerRegen = 0.175;
       zombieSpawn = 0.04;
       zombieSpeed = 0.85;
@@ -119,6 +128,7 @@ public class GameState
       zombieSmell = 20.0;
       break;
     }
+    maxStamina = playerStamina;
     for(int i = 0;i<numRows;i++)
     {
       for(int j = 0;j<numCols;j++)
@@ -154,14 +164,13 @@ public class GameState
       double colDistance = (masterStartCol - playerCurrentCol);
       colDistance = Math.pow(colDistance, 2);
       distance = Math.sqrt(rowDistance + colDistance);
-      if(distance>30) 
+      if(distance>20) 
       {
         exitLoop = true;
         master = new MasterZombie(masterStartRow,masterStartCol);
         floorPlan[masterStartRow][masterStartCol] = ZombieConstants.MASTER_ZOMBIE;
       }
     }  
-    
     graph = new Graph(floorPlan);
   }
   
@@ -265,6 +274,7 @@ public class GameState
       {
         floorPlan[nextRow][nextCol] = ZombieConstants.RANDOM_ZOMBIE;
         floorPlan[row][col] = 0;
+        graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.RANDOM_ZOMBIE);
       }
       else if(floorPlan[nextRow][nextCol] != 0)
       {
@@ -282,6 +292,7 @@ public class GameState
       {
         floorPlan[nextRow][nextCol] = ZombieConstants.LINE_ZOMBIE;
         floorPlan[row][col] = 0;
+        graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.LINE_ZOMBIE);
       }
     }
     
@@ -293,9 +304,35 @@ public class GameState
     {
       floorPlan[nextRow][nextCol] = ZombieConstants.MASTER_ZOMBIE;
       floorPlan[row][col] = 0;
+      graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.MASTER_ZOMBIE);
     }
     
   }
+  
+  public void movePlayer(int currentRow, int currentCol, int nextRow, int nextCol)
+  {
+    if(floorPlan[nextRow][nextCol] == ZombieConstants.FLOOR)
+    {
+      floorPlan[nextRow][nextCol] = ZombieConstants.PLAYER;
+      floorPlan[currentRow][currentCol] = ZombieConstants.FLOOR;
+      graph.updatePosition(currentRow, currentCol, 
+                           nextRow,    nextCol, 
+                           ZombieConstants.PLAYER);
+    }
+  }
+  
+  public void adjustPlayerState()
+  {
+    if(isPlayerRunning == true)
+    {
+      playerStamina--;
+    } 
+    else if(isPlayerRunning == false)
+    {
+      if(playerStamina<maxStamina) playerStamina++;
+    }
+  }
+  
   
   
   public GameState backupGame(GameState game,GameState duplicate)
@@ -306,7 +343,7 @@ public class GameState
   public static void main(String[] args)
   {
     GameState game = new GameState(1);
-    game.printGraph();
+    //game.printGraph();
   }
   
 }
