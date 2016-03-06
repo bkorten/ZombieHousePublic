@@ -7,9 +7,13 @@ import resources.sound.ZombieSoundWorker;
 public class GameState 
 {
   private ArrayList<RandomZombie> randZombieList = new ArrayList<>();
+  public ArrayList<RandomZombie> getRandZombieList(){return this.randZombieList;}
+  
   private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
   private int[][] floorPlan;
   public int[][] getFloorPlan(){return this.floorPlan;}
+  
+  private GameState backup;
   
   private int playerSight;
   private int playerHearing;
@@ -174,6 +178,7 @@ public class GameState
     }
     maxStamina = playerStamina;
     currentLevel = level;
+    int idCounter = 1;
     for(int i = 1;i<numRows-1;i++)
     {
       for(int j = 1;j<numCols-1;j++)
@@ -184,12 +189,14 @@ public class GameState
           float lineOrRandom = rand.nextFloat();
           if(lineOrRandom<0.5)
           {
-            lineZombieList.add(new LineZombie(i,j));
+            lineZombieList.add(new LineZombie(i,j,idCounter));
+            idCounter++;
             floorPlan[i][j] = ZombieConstants.LINE_ZOMBIE;
           }
           else
           {
-            randZombieList.add(new RandomZombie(i,j));
+            randZombieList.add(new RandomZombie(i,j,idCounter));
+            idCounter++;
             floorPlan[i][j] = ZombieConstants.RANDOM_ZOMBIE;
           }
         } 
@@ -212,7 +219,7 @@ public class GameState
       if(distance>20) 
       {
         exitLoop = true;
-        master = new MasterZombie(masterStartRow,masterStartCol);
+        master = new MasterZombie(masterStartRow,masterStartCol,idCounter);
         floorPlan[masterStartRow][masterStartCol] = ZombieConstants.MASTER_ZOMBIE;
       }
     }  
@@ -381,22 +388,13 @@ public class GameState
   
   
   
-  public GameState backupGame(GameState game)
-  {
-    GameState backup = new GameState(game.currentLevel);
-    
-    
-    
-    
-    return null;
-  }
-  
+ 
   public static void main(String[] args)
   {
     GameState game = new GameState(1);
-    game.initializeSoundThreads();
+    
     game.printGraph();
-    game.terminateSoundThreads();
+ 
   }
   
 }
