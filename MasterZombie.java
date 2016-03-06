@@ -3,9 +3,9 @@
 public class MasterZombie extends Zombie
 {
 
-  public MasterZombie(int startRow, int startCol) 
+  public MasterZombie(int startRow, int startCol, int graphicsID) 
   {
-    super(startRow, startCol);  
+    super(startRow, startCol,graphicsID);  
   }
 
 }
