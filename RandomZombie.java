@@ -5,11 +5,10 @@ import java.util.Random;
 public class RandomZombie extends Zombie 
 {
   
-  public RandomZombie(int startRow, int startCol) 
+  public RandomZombie(int startRow, int startCol, int graphicsID) 
   {
-    super(startRow, startCol);  
+    super(startRow, startCol,graphicsID);  
   }
  
   
 }
-
