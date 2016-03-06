@@ -11,6 +11,6 @@ public class ZombieConstants
   public static final int MASTER_ZOMBIE = 7;
   public static final int RANDOM_ZOMBIE = 3;
   public static final int LINE_ZOMBIE = 6;
-  public static final int NUM_ROWS = (12*3)-2;
-  public static final int NUM_COLS = (12*7)-2;
+  public static final int NUM_ROWS = (12*4)-2;
+  public static final int NUM_COLS = (12*8)-2;
 }
