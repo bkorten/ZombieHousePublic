@@ -1,5 +1,7 @@
 import java.util.ArrayList;
 import java.util.Random;
+
+import resources.sound.ZombieSoundWorker;
 //James Perry
 //2-18-2016
 public class GameState 
@@ -24,8 +26,16 @@ public class GameState
   public void setCameraAngle(double b){this.cameraAngle = b;}
   
   
-  private int currentLevel;
+  private ZombieSoundWorker step;
+  private ZombieSoundWorker scream;
+  private ZombieSoundWorker growl1;
+  private ZombieSoundWorker growl2;
+  private ZombieSoundWorker growl3;
+  private ZombieSoundWorker growl4;
   
+  private int currentLevel;
+  public int getCurrentLevel(){return this.currentLevel;}
+
   private MasterZombie master;
   
   private int playerCurrentRow;
@@ -59,6 +69,40 @@ public class GameState
   
   public double getZombieDecisionRate(){return this.zombieDecisionRate;}
   public void setZombieDecisionRate(double x){this.zombieDecisionRate = x;}
+  
+  public void terminateSoundThreads()
+  {
+    step.setTerminate(true);
+    scream.setTerminate(true);
+    growl1.setTerminate(true);
+    growl2.setTerminate(true);
+    growl3.setTerminate(true);
+    growl4.setTerminate(true);
+    while(step.isAlive() || scream.isAlive() || growl1.isAlive()
+     || growl2.isAlive() || growl3.isAlive() || growl4.isAlive())
+    {
+      try{Thread.sleep(500);}
+      catch(InterruptedException e){}
+    } 
+  }
+  
+  public void initializeSoundThreads()
+  {
+    step = new ZombieSoundWorker("FootStep.wav");
+    scream = new ZombieSoundWorker("Scream.wav");
+    growl1 = new ZombieSoundWorker("Growl_01.wav");
+    growl2 = new ZombieSoundWorker("Growl_02.wav");
+    growl3 = new ZombieSoundWorker("Growl_03.wav");
+    growl4 = new ZombieSoundWorker("Growl_04.wav");
+    step.start();
+    scream.start();
+    growl1.start();
+    growl2.start();
+    growl3.start();
+    growl4.start();
+    
+  }
+  
   
   public GameState(int level)
   {
@@ -129,9 +173,10 @@ public class GameState
       break;
     }
     maxStamina = playerStamina;
-    for(int i = 0;i<numRows;i++)
+    currentLevel = level;
+    for(int i = 1;i<numRows-1;i++)
     {
-      for(int j = 0;j<numCols;j++)
+      for(int j = 1;j<numCols-1;j++)
       {
         if (levelGen.isInHallway(i, j)) continue;
         if(rand.nextFloat()<zombieSpawn)
@@ -172,6 +217,7 @@ public class GameState
       }
     }  
     graph = new Graph(floorPlan);
+    
   }
   
   public void printGraph()
@@ -321,7 +367,7 @@ public class GameState
     }
   }
   
-  public void adjustPlayerState()
+  public void adjustPlayerStamina()
   {
     if(isPlayerRunning == true)
     {
@@ -335,15 +381,22 @@ public class GameState
   
   
   
-  public GameState backupGame(GameState game,GameState duplicate)
+  public GameState backupGame(GameState game)
   {
+    GameState backup = new GameState(game.currentLevel);
+    
+    
+    
+    
     return null;
   }
   
   public static void main(String[] args)
   {
     GameState game = new GameState(1);
-    //game.printGraph();
+    game.initializeSoundThreads();
+    game.printGraph();
+    game.terminateSoundThreads();
   }
   
 }
