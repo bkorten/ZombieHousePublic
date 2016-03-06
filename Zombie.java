@@ -28,11 +28,13 @@ public class Zombie
   public void setCollided(boolean b){this.collided = b;}
   public boolean getCollided(){return this.collided;}
   
+  private Random rand;
+  
   public Zombie(int startRow,int startCol)
   {
     this.currentRow = startRow;
     this.currentCol = startCol;
-    Random rand = new Random();
+    rand = new Random();
     int heading = rand.nextInt(4);
     switch(heading)
     {
@@ -57,3 +59,34 @@ public class Zombie
     
   }
  
+  
+  public void randomizeHeading()
+  {
+    int heading = rand.nextInt(4);
+    int headingRow = 0;
+    int headingCol = 0;
+    switch(heading)
+    {
+      case 0:
+      headingRow = 0;
+      headingCol = 1;
+      break;
+      case 1:
+      headingRow = 1;
+      headingCol = 0;
+      break;
+      case 2:
+      headingRow = -1;
+      headingCol = 0;
+      break;
+      case 3:
+      headingRow = 0;
+      headingCol = -1;
+      break;
+    }
+    this.headingRow = headingRow;
+    this.headingCol = headingCol;
+  }
+  
+  
+}
