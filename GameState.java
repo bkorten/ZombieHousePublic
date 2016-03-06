@@ -10,6 +10,9 @@ public class GameState
   public ArrayList<RandomZombie> getRandZombieList(){return this.randZombieList;}
   
   private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
+  public ArrayList<LineZombie> getLineZombieList(){return this.lineZombieList;}
+  
+  private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
   private int[][] floorPlan;
   public int[][] getFloorPlan(){return this.floorPlan;}
   
