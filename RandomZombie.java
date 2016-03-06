@@ -1,12 +1,9 @@
+import java.util.Random;
+
 //James Perry
 //2-18-2016
 public class RandomZombie extends Zombie 
 {
-
-  public void makeDecision()
-  {
-    
-  }
   
   public RandomZombie(int startRow, int startCol) 
   {
@@ -15,3 +12,4 @@ public class RandomZombie extends Zombie
  
   
 }
+
