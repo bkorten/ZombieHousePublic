@@ -11,12 +11,10 @@ public class GameState
   
   private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
   public ArrayList<LineZombie> getLineZombieList(){return this.lineZombieList;}
-  
-  private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
   private int[][] floorPlan;
   public int[][] getFloorPlan(){return this.floorPlan;}
   
-  private GameState backup;
+  
   
   private int playerSight;
   private int playerHearing;
@@ -25,7 +23,9 @@ public class GameState
   private double maxStamina;
   private double playerRegen;
   private double zombieSpawn;
-  private static double zombieSpeed;
+  private double zombieSpeed;
+  public double getZombieSpeed(){return this.zombieSpeed;}
+  
   private static double zombieSmell;
   private static double zombieDecisionRate;
   
@@ -39,6 +39,9 @@ public class GameState
   private ZombieSoundWorker growl2;
   private ZombieSoundWorker growl3;
   private ZombieSoundWorker growl4;
+  
+  private ZombieDecisionWorker decisionMaker;
+  private ZombieMoveWorker zombieMover;
   
   private int currentLevel;
   public int getCurrentLevel(){return this.currentLevel;}
@@ -75,9 +78,24 @@ public class GameState
   public int getPlayerCurrentCol(){return this.playerCurrentCol;}
   
   public double getZombieDecisionRate(){return this.zombieDecisionRate;}
-  public void setZombieDecisionRate(double x){this.zombieDecisionRate = x;}
+  public void setZombieDecisionRate(double x)
+  {
+    this.zombieDecisionRate = x;
+    decisionMaker.setZombieDecisionRate(x);
+  }
   
-  public void terminateSoundThreads()
+  
+  public void setGameRunning(boolean b)
+  {
+    decisionMaker.setRunning(true);
+    zombieMover.setRunning(true);
+  }
+  
+
+  
+
+  
+  public void terminateThreads()
   {
     step.setTerminate(true);
     scream.setTerminate(true);
@@ -85,15 +103,20 @@ public class GameState
     growl2.setTerminate(true);
     growl3.setTerminate(true);
     growl4.setTerminate(true);
+    decisionMaker.setRunning(false);
+    zombieMover.setRunning(false);
+    decisionMaker.setTerminate(true);
+    zombieMover.setTerminate(true);
     while(step.isAlive() || scream.isAlive() || growl1.isAlive()
-     || growl2.isAlive() || growl3.isAlive() || growl4.isAlive())
+     || growl2.isAlive() || growl3.isAlive() || growl4.isAlive()
+     || decisionMaker.isAlive())
     {
       try{Thread.sleep(500);}
       catch(InterruptedException e){}
     } 
   }
   
-  public void initializeSoundThreads()
+  public void initializeThreads()
   {
     step = new ZombieSoundWorker("FootStep.wav");
     scream = new ZombieSoundWorker("Scream.wav");
@@ -101,12 +124,20 @@ public class GameState
     growl2 = new ZombieSoundWorker("Growl_02.wav");
     growl3 = new ZombieSoundWorker("Growl_03.wav");
     growl4 = new ZombieSoundWorker("Growl_04.wav");
+    
+    decisionMaker = new ZombieDecisionWorker(this);
+    zombieMover = new ZombieMoveWorker(this);
+    
     step.start();
     scream.start();
     growl1.start();
     growl2.start();
     growl3.start();
     growl4.start();
+    
+    
+    decisionMaker.start();
+    zombieMover.start();
     
   }
   
@@ -230,7 +261,7 @@ public class GameState
     
   }
   
-  public void printGraph()
+  public void printFloorPlan()
   {
     for(int i = 0;i<ZombieConstants.NUM_ROWS;i++)
     {
@@ -324,8 +355,8 @@ public class GameState
     {
       row = randZombieList.get(i).getCurrentRow();
       col = randZombieList.get(i).getCurrentCol();
-      nextRow = randZombieList.get(i).getHeadingRow();
-      nextCol = randZombieList.get(i).getHeadingCol();
+      nextRow = row+randZombieList.get(i).getHeadingRow();
+      nextCol = col+randZombieList.get(i).getHeadingCol();
       if(floorPlan[nextRow][nextCol] == 0)
       {
         floorPlan[nextRow][nextCol] = ZombieConstants.RANDOM_ZOMBIE;
@@ -342,8 +373,8 @@ public class GameState
     {
       row = lineZombieList.get(i).getCurrentRow();
       col = lineZombieList.get(i).getCurrentCol();
-      nextRow = lineZombieList.get(i).getHeadingRow();
-      nextCol = lineZombieList.get(i).getHeadingCol();
+      nextRow = row+lineZombieList.get(i).getHeadingRow();
+      nextCol = col+lineZombieList.get(i).getHeadingCol();
       if(floorPlan[nextRow][nextCol] == 0)
       {
         floorPlan[nextRow][nextCol] = ZombieConstants.LINE_ZOMBIE;
@@ -354,8 +385,8 @@ public class GameState
     
     row = master.getCurrentRow();
     col = master.getCurrentCol();
-    nextRow = master.getHeadingRow();
-    nextCol = master.getHeadingCol();
+    nextRow = row+master.getHeadingRow();
+    nextCol = col+master.getHeadingCol();
     if(floorPlan[nextRow][nextCol] == 0)
     {
       floorPlan[nextRow][nextCol] = ZombieConstants.MASTER_ZOMBIE;
@@ -389,15 +420,10 @@ public class GameState
     }
   }
   
-  
-  
- 
-  public static void main(String[] args)
+  public void initializeBackup(GameState game, GameState backup)
   {
-    GameState game = new GameState(1);
     
-    game.printGraph();
- 
   }
+  
   
 }
