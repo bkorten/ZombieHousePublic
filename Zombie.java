@@ -7,6 +7,10 @@ import java.util.Random;
 
 public class Zombie 
 {
+  private int graphicsID;  
+  public int getGraphicsID(){return this.graphicsID;}
+  public void setGraphicsID(int x){this.graphicsID = x;}
+
   private int currentRow;
   private int currentCol;
   public int getCurrentRow(){return this.currentRow;}
@@ -30,10 +34,11 @@ public class Zombie
   
   private Random rand;
   
-  public Zombie(int startRow,int startCol)
+  public Zombie(int startRow,int startCol,int graphicsID)
   {
     this.currentRow = startRow;
     this.currentCol = startCol;
+    this.graphicsID = graphicsID;
     rand = new Random();
     int heading = rand.nextInt(4);
     switch(heading)
