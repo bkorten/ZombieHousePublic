@@ -56,6 +56,11 @@ public class LevelGenerator
     
   
   }
+  public int getCell(int row, int col)
+  {
+    return graph[row][col];
+  }
+  
   public void carveRowFromLeft(int row)
   {
     int colPasses = rand.nextInt(2)+4;
@@ -122,14 +127,32 @@ public class LevelGenerator
   }
   public boolean isInHallway(int row, int col)
   {
+    if(row == 0 || row == numRows-1) return false;
+    if(col == 0 || col == numCols-1) return false;
     int westCount = 0;
     int eastCount = 0;
     int northCount = 0;
     int southCount = 0;
-    while(graph[row][col-westCount] == 0) westCount++; 
-    while(graph[row][col+eastCount] == 0) eastCount++; 
-    while(graph[row-northCount][col] == 0) northCount++;
-    while(graph[row+southCount][col] == 0) southCount++;
+    while(graph[row][col-westCount] == 0)
+    {
+      if(col-westCount<1) break;
+      westCount++; 
+    }
+    while(graph[row][col+eastCount] == 0)
+    {
+      if(col+eastCount>numCols-1) break;
+      eastCount++; 
+    }
+    while(graph[row-northCount][col] == 0)
+    { 
+      if(row-northCount<1) break;
+      northCount++;
+    }
+    while(graph[row+southCount][col] == 0)
+    {
+      if(row+southCount>=numRows-1) break;
+      southCount++;
+    }
     if(westCount+eastCount == 4) return true;
     if(northCount+southCount == 4) return true;
     return false;
@@ -442,15 +465,16 @@ public class LevelGenerator
     double distance = 0;
     while(exit == false)  
     {
-      playerStartRow = rand.nextInt(numRows-3)+2;
-      playerStartCol = rand.nextInt(numRows-3)+2;
+      playerStartRow = rand.nextInt(numRows-4)+2;
+      playerStartCol = rand.nextInt(numRows-4)+2;
       while(graph[playerStartRow][playerStartCol] != ZombieConstants.FLOOR)
       {
-        playerStartRow = rand.nextInt(numRows - 3) + 1;
-        playerStartCol = rand.nextInt(numCols - 3) + 1;
+        playerStartRow = rand.nextInt(numRows - 4) + 2;
+        playerStartCol = rand.nextInt(numCols - 4) + 2;
       }
       
       if(!isInHallway(playerStartRow, playerStartCol)) continue;
+   
       distance = 0;
       double rowDistance = (exitRow1 - playerStartRow);
       rowDistance = Math.pow(rowDistance, 2);
@@ -458,8 +482,8 @@ public class LevelGenerator
       colDistance = Math.pow(colDistance, 2);
       distance = Math.sqrt(rowDistance + colDistance);
       int requiredDistance = 0;
-      if(exitCol1 == 0 || exitCol1 == numCols-1) requiredDistance = 60;
-      else requiredDistance = 36;
+      if(exitCol1 == 0 || exitCol1 == numCols-1) requiredDistance = 50;
+      else requiredDistance = 33;
       if(distance>requiredDistance) exit = true;
     }
     graph[playerStartRow][playerStartCol] = ZombieConstants.PLAYER;
@@ -612,7 +636,6 @@ public class LevelGenerator
       graph[0][i] = 4;
       graph[numRows-1][i] = 4;
     }
-    
     initializeExit();
     initializeStart();
     breakFullCols();
