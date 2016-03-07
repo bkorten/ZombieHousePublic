@@ -17,6 +17,7 @@ public class Tile implements Comparable<Tile>
   private double f_value;
   public double getFValue(){return this.f_value;}
   public void setFValue(double x){this.f_value = x;}
+  
   private double g_value;
   public double getGValue(){return this.g_value;}
   public void setGValue(double x){this.g_value = x;}
