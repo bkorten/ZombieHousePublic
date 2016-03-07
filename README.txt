@@ -18,6 +18,14 @@ Zombie.Java
 ZombieConstants.java
 -This class contains static constants used by any class that deals with the graph or floorPlan objects.
 
+GraphicsComponent.java
+-this class extends Box.  this is the parent class for Floor.java, Wall.java, and FireTrap.  This class has a function that takes the grid position of and object and translates it to 3D space. 
+
+Floor.java
+-this class extends GraphicsComponent.  This is used for the floor and the ceiling of a level. 
+
+LevelGraphics.java
+-This class creates a group that contains all the static graphics for a level.  this includes walls obstacles firetraps and the exit
 
 
 
