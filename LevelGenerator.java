@@ -1,14 +1,12 @@
-/*
- * CS 351 Project-Zombie House
+/**
+ * CS 351: Project-Zombie House
  * James Perry
  * This class is used to create a 2D floorplan for 
  * the zombie house, determine the player starting position,
  * the exit position, and the location of all firetraps, halls
  * walls, and hallways. It is instantiated by GameState every level.
- * This class DOES NOT create or place zombies on the floor plan.
- * 
- */
-
+ * This class DOES NOT create or place zombies on the floor plan. 
+*/
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Random;
@@ -50,7 +48,7 @@ public class LevelGenerator
     }       
   }
   
-  /*
+  /**
    * Constructor creates a border of wall tiles
    * around an empty floor plan.
    */
@@ -72,7 +70,7 @@ public class LevelGenerator
     }   
   }
   
-  /*
+  /**
    * This method carves a wall from the left side of the graph   
    * Everytime we carve past a vertical wall, we decrease the 
    * number of colPasses (which are randomly determined). When
@@ -95,7 +93,7 @@ public class LevelGenerator
     }
   }
   
-  /*
+  /**
    * This method carves a wall from the right side of the graph   
    * Everytime we carve past a vertical wall, we decrease the 
    * number of colPasses (which are randomly determined). When
@@ -118,7 +116,7 @@ public class LevelGenerator
     }
   }
   
-  /*
+  /**
    * This method carves a wall from the top of the graph   
    * Everytime we carve past a horizontal wall, we decrease the 
    * number of rowPasses (which are randomly determined). When
@@ -140,7 +138,7 @@ public class LevelGenerator
       if(rowPasses == 0) break;
     } 
   }
-  /*
+  /**
    * This method carves a wall from the bottom of the graph   
    * Everytime we carve past a horizonatl wall, we decrease the 
    * number of rowPasses (which are randomly determined). When
@@ -163,7 +161,7 @@ public class LevelGenerator
       
     } 
   }
-  /*
+  /**
    * This method is called by several methods in this class, as well
    * as some of the methods in GameState. It returns a boolean if the
    * tile in graph[row][col] is located within a hallway or not.
@@ -215,7 +213,7 @@ public class LevelGenerator
     return false;
   }
   
-  /*
+  /**
    * This method is used after the walls are carved into
    * the floorPlan to fix a periodic occurrance of small
    * 3*3 spaces. They are neither hallways nor rooms so
@@ -251,7 +249,7 @@ public class LevelGenerator
       }
     }
   }
-  /*
+  /**
    * This is a method called after the walls are carved into the 
    * floorPlan. It fixes an issue where occasionally we end up with
    * three hallways sitting atop one another, because java's
@@ -283,7 +281,7 @@ public class LevelGenerator
       }
     }
   }
-  /*
+  /**
    * This method is called to clear the same issue as the method above, but 
    * deals with horizontal hallways instead of vertical ones.
    */
@@ -313,7 +311,7 @@ public class LevelGenerator
     }
   }
   
-  /*
+  /**
    * This method is called to get rid of abnormally large spaces
    * that occur when a few calls to carveColFrom* and carveRowFrom*
    * end up ignoring the a similar portion of the graph, so we end up
@@ -354,7 +352,7 @@ public class LevelGenerator
       }
     }
   }
-  /*
+  /**
    * This method is used when we're adding exits to every room and hallway.
    * When we add an exit to a room, we set all of the tiles in that room equal
    * to a number other than ZombieConstants.FLOOR so we don't come back and
@@ -375,7 +373,7 @@ public class LevelGenerator
     }
     return true;
   }
-  /*
+  /**
    * This class is used by initializeDoorways()
    * in order to see if adding an exit to a particular
    * room's wall is a bad idea. For example, we wouldn't want to
@@ -397,7 +395,7 @@ public class LevelGenerator
     if(wall == 4 && endCol == numCols-2) return true;
     return false;
   }
-  /*
+  /**
    * This method is used to carve doorways into the
    * floorPlan. Once a room has doorways, we set all of the floor tiles
    * equal to an arbitrary number,3. Once all of the floor tiles equal three
@@ -503,7 +501,7 @@ public class LevelGenerator
       graph[row][col] = 5;
     }
   }
-  /*
+  /**
    * This method is used to initialize the exit on the border of the floorPlan
    * it also sets the tiles adjacent to he exit equal to FLOOR in case a wall was carved
    * right next to the border
@@ -574,7 +572,7 @@ public class LevelGenerator
     graph[adjRow2][adjCol2] = ZombieConstants.FLOOR;
   }
   
-  /*
+  /**
    * This method is used to initialize the starting position of the player.
    * It needs to be an appropriate distance away from the exit
    */
@@ -607,9 +605,10 @@ public class LevelGenerator
     }
     graph[playerStartRow][playerStartCol] = ZombieConstants.PLAYER;
   }
-  /*
+  /**
    * This method is called by breakFullCols to see if a given column is 
    * completely carved into a wall.
+   * @param col Column in question
    */
   public boolean isColFull(int col)
   {
@@ -620,7 +619,7 @@ public class LevelGenerator
     return true;
   }
 
-  /*
+  /**
    * This method is used to carve doorways into columns that
    * didn't end up being chosen to have exits carved into them
    * by any of their adjacent rooms/halls.
@@ -640,7 +639,7 @@ public class LevelGenerator
       }
     }
   }
-  /*
+  /**
    * This method is used to randomly place obstacles across the floorPlan
    */
   public void initializeObstacles()
@@ -677,7 +676,7 @@ public class LevelGenerator
       numObstacles--;
     }
   }
-  /*
+  /**
    * This method is called to randomly place firetraps across the floor
    * plan. They are never placed in hallways
    */
@@ -696,7 +695,7 @@ public class LevelGenerator
       numFireTraps--;
     }
   }
-  /*
+  /**
   * This method is called to carve the walls into the floor plan
   * and call the utility functions that clean up some situations
   * that are prohibited by the rules.
@@ -790,12 +789,4 @@ public class LevelGenerator
     initializeObstacles();
     initializeFireTraps();
   }
-  public static void main(String[] args) 
-  {
-      LevelGenerator g = new LevelGenerator();
-      g.carveMap();
-      g.printFloorPlan();
-
-  }
-
 }
