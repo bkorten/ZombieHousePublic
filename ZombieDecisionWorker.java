@@ -19,6 +19,7 @@ public class ZombieDecisionWorker extends Thread
   private GameState game;
   /*
   *@param GameState game The GameState object from which we will grab the decision rate.
+  *                      and call the decision making methods.
   */
   public ZombieDecisionWorker(GameState game)
   {
