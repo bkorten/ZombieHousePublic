@@ -14,7 +14,7 @@ public class GameState
   private int[][] floorPlan;
   public int[][] getFloorPlan(){return this.floorPlan;}
   
-  
+  private boolean alertMaster = false;
   
   private int playerSight;
   private int playerHearing;
@@ -163,7 +163,7 @@ public class GameState
       zombieSpawn = 0.01;
       zombieSpeed = 1.0;
       zombieDecisionRate = 1.0;
-      zombieSmell = 15.0;
+      zombieSmell = 1500.0;
       break;
       case 2:
       playerSight = 5;
@@ -292,9 +292,11 @@ public class GameState
         if(randZombieList.get(i).getCollided() == true)
         {
           randZombieList.get(i).randomizeHeading();
+          randZombieList.get(i).setCollided(false);
           continue;
         }
         graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
+        System.out.println("MA");
         newHeadingRow = graph.getHeadingRow();
         newHeadingCol = graph.getHeadingCol();
         randZombieList.get(i).setHeadingRow(newHeadingRow);
@@ -397,11 +399,6 @@ public class GameState
         randZombieList.get(i).setCurrentRow(nextRow);
         randZombieList.get(i).setCurrentCol(nextCol);
         graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.RANDOM_ZOMBIE);
-      }
-      else if(floorPlan[nextRow][nextCol] != 0
-           && floorPlan[nextRow][nextCol] != ZombieConstants.PLAYER)
-      {
-        randZombieList.get(i).setCollided(true);
       }
     }
     
