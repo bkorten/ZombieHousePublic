@@ -790,4 +790,12 @@ public class LevelGenerator
     initializeObstacles();
     initializeFireTraps();
   }
+  public static void main(String[] args) 
+  {
+      LevelGenerator g = new LevelGenerator();
+      g.carveMap();
+      g.printFloorPlan();
+
+  }
+
 }
