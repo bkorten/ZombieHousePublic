@@ -1,5 +1,8 @@
 
 import java.util.ArrayList;
+import java.util.Arrays;
+import java.util.Collections;
+import java.util.List;
 
 import javafx.animation.AnimationTimer;
 import javafx.application.Application;
@@ -11,6 +14,7 @@ import javafx.scene.paint.Color;
 import javafx.scene.shape.DrawMode;
 import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
+
 
 
 public class ZombieHouseGameMain extends Application 
@@ -26,6 +30,7 @@ public class ZombieHouseGameMain extends Application
   
   private ArrayList<GraphicsZombie> lineZombies= new ArrayList<GraphicsZombie>(); 
   private ArrayList<GraphicsZombie> randZombies= new ArrayList<GraphicsZombie>();
+  private GraphicsZombie master;
   private MeshView zombieMeshes = new MeshView();
    
   public void start(Stage primaryStage)
@@ -43,8 +48,8 @@ public class ZombieHouseGameMain extends Application
 	
 	startLevel(root);
 	player= new Player(currentLevelGraphics.playerStartX,
-			currentLevelGraphics.playerStartZ);
-	
+			currentLevelGraphics.playerStartZ, currentGameState.getPlayerCurrentRow(),currentGameState.getPlayerCurrentCol());
+	player.setGameState(currentGameState);
 	controller= new Controller(player);
 	
 	controller.handleKeyboard(scene, root);
@@ -73,6 +78,7 @@ public class ZombieHouseGameMain extends Application
 		
 		}
 		ArrayList<Point2D> lineIJs= currentLevelGraphics.lineZombieSpawnsIJ;
+		
 		for(int i = 0; i< lineZombies.size(); i++)
 		{
 			GraphicsZombie lineTmp = lineZombies.get(i);
@@ -90,13 +96,15 @@ public class ZombieHouseGameMain extends Application
 			
 			
 		}
-		ArrayList<Point2D> randIJs= currentLevelGraphics.lineZombieSpawnsIJ;
+		ArrayList<Point2D> randIJs= currentLevelGraphics.randomZombieSpawnsIJ;
 		for(int i = 0; i< randZombies.size(); i++)
 		{
 			GraphicsZombie randTmp = randZombies.get(i);
 			Point2D randIJ= randIJs.get(i);
 			randTmp.setIJ( (int)randIJ.getX(), (int)randIJ.getY() );
 		}
+		
+		master= new GraphicsZombie(currentLevelGraphics.masterZombieX,currentLevelGraphics.masterZombieZ,ZombieConstants.MASTER_ZOMBIE);
 		
 		setZombieId();
 		int totalZombie = lineZombies.size() + randZombies.size();
@@ -105,21 +113,24 @@ public class ZombieHouseGameMain extends Application
 		
 		root.getChildren().addAll(randZombies);
 		root.getChildren().addAll(lineZombies);
-		
+		root.getChildren().add(master);
 	}
   
   private void setZombieId()
   {
 	 int lZs = currentGameState.getLineZombieList().size();
 	 int rZs = currentGameState.getRandZombieList().size();
-	//System.out.println(lZs+rZs);  
+	System.out.println(rZs);  
+	
+	master.setGameStateZombie(currentGameState.getMaster());
 	for(GraphicsZombie lineZombie: lineZombies)
 	{
 		for(Zombie gameStateZombie : currentGameState.getLineZombieList())
 		{
-			if((lineZombie.getIpos() == gameStateZombie.getCurrentRow()) 
-					&&(lineZombie.getJpos() == gameStateZombie.getCurrentCol()))
+			if((lineZombie.getIpos() == gameStateZombie.getStartRow()) 
+					&&(lineZombie.getJpos() == gameStateZombie.getStartCol()))
 					{
+						System.out.println("matched up");	
 						lineZombie.setId(gameStateZombie.getGraphicsID());
 						lineZombie.setGameStateZombie(gameStateZombie);
 						break;
@@ -133,9 +144,10 @@ public class ZombieHouseGameMain extends Application
 	{
 		for(Zombie gameStateZombie : currentGameState.getRandZombieList())
 		{
-			if((randZombie.getIpos() == gameStateZombie.getCurrentRow()) 
-					&&(randZombie.getJpos() == gameStateZombie.getCurrentCol()))
+			if((randZombie.getIpos() == gameStateZombie.getStartRow()) 
+					&&(randZombie.getJpos() == gameStateZombie.getStartCol()))
 					{
+						System.out.println("matched rand");
 						randZombie.setId(gameStateZombie.getGraphicsID());
 						randZombie.setGameStateZombie(gameStateZombie);
 						break;
@@ -149,10 +161,14 @@ public class ZombieHouseGameMain extends Application
   
   private void startLevel(Group root)
   {
-	  currentLevelIndex=1;
+	  currentLevelIndex= 1;
 	  currentGameState = new GameState(currentLevelIndex);
+	  currentGameStatecopy=new GameState(currentLevelIndex);
+	  
+	  currentGameState.initializeBackup(currentGameState, currentGameStatecopy); 
 	  buildLevelGraphics(root);
 	  addZombies(root);
+	  currentGameState.initializeThreads();
 
   }
   
@@ -161,14 +177,17 @@ public class ZombieHouseGameMain extends Application
 
 	currentLevelIndex++;
     currentGameState = new GameState(currentLevelIndex);
+    currentGameState.initializeBackup(currentGameState, currentGameStatecopy);
+    
     root.getChildren().remove(currentLevelGraphics);
     root.getChildren().removeAll(lineZombies);
     root.getChildren().removeAll(randZombies);
+    
     buildLevelGraphics(root);
     player.playerCamera.setTranslateX(currentLevelGraphics.playerStartX);
     player.playerCamera.setTranslateZ(currentLevelGraphics.playerStartZ);
     addZombies(root);
-    controller.setWalls(currentLevelGraphics.walls);
+    
     
     
     
@@ -192,22 +211,54 @@ public class ZombieHouseGameMain extends Application
   private void restartLevel()
   {
 	  
-	  
-	  //currentGameStatecopy=currentGameState.backupGame(currentGameState);
+	    player.playerCamera.setTranslateX(currentLevelGraphics.playerStartX);
+	    player.playerCamera.setTranslateZ(currentLevelGraphics.playerStartZ);
+	    System.out.println("RESTART");
+	 
   }
   
   private boolean eaten()
   {
+	  
+	  int i=0;
+	  ArrayList<Double> dists=new ArrayList<Double>();
 	  for(GraphicsZombie zombie : lineZombies)
 	  {
-		//check to see if the zombie co
+		  
+		double xComp =Math.pow(zombie.currentX -player.playerCurX , 2);
+		double zComp =Math.pow(zombie.currentZ -player.playerCurZ , 2);
+	    Double distance = Math.sqrt(xComp+zComp);
+	    dists.add(distance);
+	    
+	    if( distance < 350)
+	    {
+	    	System.out.println("Eaten");
+	    	return true;
+	    }
 	  }
+	  
+	 
+	  for(GraphicsZombie zombie : randZombies)
+	  {
+		double xComp =Math.pow(zombie.currentX -player.playerCurX , 2);
+		double zComp =Math.pow(zombie.currentZ -player.playerCurZ , 2);
+	    Double distance = Math.sqrt(xComp+zComp);
+	    dists.add(distance);
+	    if( distance < 350)
+	    {
+	    	System.out.println("Eaten");
+	    	return true;
+	    }
+	  }
+	   //System.out.println(Collections.min(dists));	
+	 
 	  return false;
   }
   
   
   private void moveGraphicsZombies()
   {
+	  
 	  for(GraphicsZombie lZombie: lineZombies)
 	  {
 		lZombie.headingToRender();
@@ -229,7 +280,7 @@ public class ZombieHouseGameMain extends Application
 	  
 	  
 	  //System.out.println(distance);
-	  if(distance < 150)
+	  if(distance < 300)
 	  {
 		 return true;
 	  }
@@ -250,7 +301,10 @@ public class ZombieHouseGameMain extends Application
 		
 	  if(!endGame())
 	  {
-		  //moveGraphicsZombies();	
+		  
+		 currentGameState.setGameRunning(false);
+		 moveGraphicsZombies();
+		  
 	      if(eaten())
 	      {
 	    	  restartLevel();
@@ -260,6 +314,7 @@ public class ZombieHouseGameMain extends Application
 		  { 
 			nextLevel(root);  	  
 		  }
+		  currentGameState.setGameRunning(true);
 	  }	
 	  else
 		System.out.println("YOU BEAT THE GAME");	
