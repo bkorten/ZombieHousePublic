@@ -1,4 +1,4 @@
-/*
+/**
  * James Perry
  * This class contains constants useful to standardize some of the
  * values that different classes need to be able to see.
