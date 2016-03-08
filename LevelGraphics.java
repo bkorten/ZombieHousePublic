@@ -127,7 +127,7 @@ public class LevelGraphics extends Group
 				{tilecount=1;}
 			  
 			    Floor randomZombiespawntmp = new Floor(i,j,tilecount);
-			    Floor randomZombiespawntmp2= new Floor(i,j,tilecount);
+			    Floor randomZombiespawntmp2= new Floor(i,j,1);
 			 
 			    randomZombiespawntmp.setSceneLocation(mapCenterX,mapCenterY);
 			    randomZombiespawntmp2.setSceneLocation(mapCenterX, mapCenterY);
@@ -144,6 +144,9 @@ public class LevelGraphics extends Group
 			    
 			    Point2D randomzombiePosition = new Point2D(randomZombiespawntmp.renderSpaceX,randomZombiespawntmp.renderSpaceZ);
 			    randomZombieSpawns.add(randomzombiePosition);
+			    
+			    Point2D randzombieIJ= new Point2D(i ,j);
+			    randomZombieSpawnsIJ.add(randzombieIJ);
 			    
 			    tilecount++;
 			    break;
@@ -209,6 +212,7 @@ public class LevelGraphics extends Group
 			    
 			    masterZombieX=mastertmp.renderSpaceX;
 			    masterZombieZ= mastertmp.renderSpaceZ;
+			    
 			    tilecount++;
 			    
 			    break;
