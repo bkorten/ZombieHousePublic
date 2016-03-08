@@ -1,5 +1,3 @@
-
-
 public class Tile implements Comparable<Tile>
 {
   private int row;
@@ -17,7 +15,6 @@ public class Tile implements Comparable<Tile>
   private double f_value;
   public double getFValue(){return this.f_value;}
   public void setFValue(double x){this.f_value = x;}
-  
   private double g_value;
   public double getGValue(){return this.g_value;}
   public void setGValue(double x){this.g_value = x;}
@@ -26,7 +23,7 @@ public class Tile implements Comparable<Tile>
   public double getHValue(){return this.h_value;}
   public void setHValue(double x){this.h_value = x;}
   
-  private int pathMarker = 3;
+  private int pathMarker = 0;
   public void setPathMarker(int x){this.pathMarker = x;}
   public int getPathMarker(){return this.pathMarker;}
 
@@ -54,3 +51,4 @@ public class Tile implements Comparable<Tile>
   }
   
 }
+
