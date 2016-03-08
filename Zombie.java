@@ -1,10 +1,11 @@
-//James Perry
-//2-18-2016
-import java.util.ArrayList;
+/**
+ * This class is used to represent Zombies.
+ * It holds the position and heading, a collision
+ * boolean, as well as an ID number for graphics rendering. 
+ * If GameState needs a zombie to randomize its heading, 
+ * this class contains a method to do so. 
+ */
 import java.util.Random;
-
-
-
 public class Zombie 
 {
   private int graphicsID;  
@@ -18,22 +19,26 @@ public class Zombie
   public void setCurrentRow(int x){this.currentRow = x;}
   public void setCurrentCol(int x){this.currentCol = x;}
   
-  private int headingRow;
+  private volatile int headingRow;
   public int getHeadingRow(){return this.headingRow;}
   public void setHeadingRow(int x){this.headingRow = x;}  
-  private int headingCol;
+  private volatile int headingCol;
   public int getHeadingCol(){return this.headingCol;}
   public void setHeadingCol(int x){this.headingCol = x;}
-  private static double zombieSmell;
-  public void setZombieSmell(double x){this.zombieSmell = x;}
-  public double getZombieSmell(){return this.zombieSmell;}
-  
+
   private boolean collided = false;
   public void setCollided(boolean b){this.collided = b;}
   public boolean getCollided(){return this.collided;}
   
   private Random rand;
   
+  /**
+   * Constructor takes three ints, two for position, one
+   * for ID number.
+   * @param startRow Starting position row
+   * @param startCol Starting position col
+   * @param graphicsID Unique ID number 
+   */
   public Zombie(int startRow,int startCol,int graphicsID)
   {
     this.currentRow = startRow;
@@ -59,12 +64,13 @@ public class Zombie
       headingRow = 0;
       headingCol = -1;
       break;
-    
-    }
-    
+    }   
   }
- 
-  
+  /**
+   * This method is used to randomize the zombie's heading. 
+   * It is called by GameState whenever a zombie has collided
+   * with something else in the floorPlan.
+   */
   public void randomizeHeading()
   {
     int heading = rand.nextInt(4);
@@ -92,6 +98,4 @@ public class Zombie
     this.headingRow = headingRow;
     this.headingCol = headingCol;
   }
-  
-  
 }
