@@ -6,7 +6,10 @@ import javafx.application.Application;
 import javafx.geometry.Point2D;
 import javafx.scene.Group;
 import javafx.scene.Scene;
+import javafx.scene.SceneAntialiasing;
 import javafx.scene.paint.Color;
+import javafx.scene.shape.DrawMode;
+import javafx.scene.shape.MeshView;
 import javafx.stage.Stage;
 
 
@@ -18,45 +21,63 @@ public class ZombieHouseGameMain extends Application
   private GameState currentGameStatecopy;
   private Controller controller;
   private Player player;
+  private Group root;
+  private StlLoader stlLoader;
   
-  
-  private ArrayList<GraphicsZombie> zombies= new ArrayList<GraphicsZombie>(); 
-  
+  private ArrayList<GraphicsZombie> lineZombies= new ArrayList<GraphicsZombie>(); 
+  private ArrayList<GraphicsZombie> randZombies= new ArrayList<GraphicsZombie>();
+  private MeshView zombieMeshes = new MeshView();
+   
   public void start(Stage primaryStage)
   {
+	  
 	primaryStage.setFullScreen(true);  
 	
-	Group root= new Group();
+	StlLoader stl = new StlLoader();
+    root= new Group();
 	
 	Scene scene = new Scene(root,500,500,true);
 	scene.setFill(Color.BLACK);
 	
 	primaryStage.setTitle("Zombie house");
-	startLevel();
-	buildLevelGraphics(root);
-	addZombies(root);
-	player= new Player(currentLevelGraphics.playerStartX,currentLevelGraphics.playerStartZ);
+	
+	startLevel(root);
+	player= new Player(currentLevelGraphics.playerStartX,
+			currentLevelGraphics.playerStartZ);
+	
 	controller= new Controller(player);
-	controller.setWalls(currentLevelGraphics.walls);
+	
 	controller.handleKeyboard(scene, root);
 	controller.handleMouse(scene, root);
+	
+	controller.setWalls(currentLevelGraphics.walls);
 	scene.setCamera(player.playerCamera);
 	
 	primaryStage.setTitle("Zombie House");
 	primaryStage.setScene(scene);
 	primaryStage.show();
-  
+    MainGameLoop gameloop= new MainGameLoop();
+    gameloop.start();
   }
   private void addZombies(Group root)
 	{
-		double tmpx,tmpz;
+	  	
+	   double tmpx,tmpz;
 		for(Point2D lineZSpawn : currentLevelGraphics.lineZombieSpawns)
 		{	
 			tmpx=lineZSpawn.getX();
 			tmpz=lineZSpawn.getY();
 			
 			GraphicsZombie lineZtmp = new GraphicsZombie(tmpx,tmpz,ZombieConstants.LINE_ZOMBIE);
-			zombies.add(lineZtmp);
+			lineZombies.add(lineZtmp);
+		
+		}
+		ArrayList<Point2D> lineIJs= currentLevelGraphics.lineZombieSpawnsIJ;
+		for(int i = 0; i< lineZombies.size(); i++)
+		{
+			GraphicsZombie lineTmp = lineZombies.get(i);
+			Point2D lineIJ= lineIJs.get(i);
+			lineTmp.setIJ( (int)lineIJ.getX(), (int)lineIJ.getY() );
 		}
 		
 		for(Point2D randZSpawn : currentLevelGraphics.randomZombieSpawns)
@@ -64,58 +85,160 @@ public class ZombieHouseGameMain extends Application
 			tmpx=randZSpawn.getX();
 			tmpz=randZSpawn.getY();
 			
-			GraphicsZombie lineZtmp = new GraphicsZombie(tmpx,tmpz,ZombieConstants.RANDOM_ZOMBIE);
-			zombies.add(lineZtmp);
+			GraphicsZombie randZtmp = new GraphicsZombie(tmpx,tmpz,ZombieConstants.RANDOM_ZOMBIE);
+			randZombies.add(randZtmp);
+			
+			
 		}
-		root.getChildren().addAll(zombies);
+		ArrayList<Point2D> randIJs= currentLevelGraphics.lineZombieSpawnsIJ;
+		for(int i = 0; i< randZombies.size(); i++)
+		{
+			GraphicsZombie randTmp = randZombies.get(i);
+			Point2D randIJ= randIJs.get(i);
+			randTmp.setIJ( (int)randIJ.getX(), (int)randIJ.getY() );
+		}
+		
+		setZombieId();
+		int totalZombie = lineZombies.size() + randZombies.size();
+		System.out.println("number of Zombies "+ totalZombie);
+		
+		
+		root.getChildren().addAll(randZombies);
+		root.getChildren().addAll(lineZombies);
+		
 	}
-  private void startLevel()
+  
+  private void setZombieId()
   {
-	  currentLevelIndex=0;
-	  currentGameState = new GameState(currentLevelIndex);
+	 int lZs = currentGameState.getLineZombieList().size();
+	 int rZs = currentGameState.getRandZombieList().size();
+	//System.out.println(lZs+rZs);  
+	for(GraphicsZombie lineZombie: lineZombies)
+	{
+		for(Zombie gameStateZombie : currentGameState.getLineZombieList())
+		{
+			if((lineZombie.getIpos() == gameStateZombie.getCurrentRow()) 
+					&&(lineZombie.getJpos() == gameStateZombie.getCurrentCol()))
+					{
+						lineZombie.setId(gameStateZombie.getGraphicsID());
+						lineZombie.setGameStateZombie(gameStateZombie);
+						break;
+					}
+			
+		}
+		
+	}
+	
+	for(GraphicsZombie randZombie: randZombies)
+	{
+		for(Zombie gameStateZombie : currentGameState.getRandZombieList())
+		{
+			if((randZombie.getIpos() == gameStateZombie.getCurrentRow()) 
+					&&(randZombie.getJpos() == gameStateZombie.getCurrentCol()))
+					{
+						randZombie.setId(gameStateZombie.getGraphicsID());
+						randZombie.setGameStateZombie(gameStateZombie);
+						break;
+					}
+			
+		}
+		
+	}
 	  
-	  currentGameStatecopy=new GameState(currentLevelIndex);
-	  //currentGameState.initilizeBackupGame(currentGameState, currentGameStatecopy);
   }
   
-  private void nextLevel()
+  private void startLevel(Group root)
   {
-    currentLevelIndex++;
+	  currentLevelIndex=1;
+	  currentGameState = new GameState(currentLevelIndex);
+	  buildLevelGraphics(root);
+	  addZombies(root);
+
+  }
+  
+  private void nextLevel(Group root)
+  {
+
+	currentLevelIndex++;
     currentGameState = new GameState(currentLevelIndex);
-    currentGameState.initilizeBackupGame(currentGameState, currentGameStatecopy);
+    root.getChildren().remove(currentLevelGraphics);
+    root.getChildren().removeAll(lineZombies);
+    root.getChildren().removeAll(randZombies);
+    buildLevelGraphics(root);
+    player.playerCamera.setTranslateX(currentLevelGraphics.playerStartX);
+    player.playerCamera.setTranslateZ(currentLevelGraphics.playerStartZ);
+    addZombies(root);
+    controller.setWalls(currentLevelGraphics.walls);
+    
+    
+    
+  }
+  private boolean endGame()
+  {
+	 if(currentLevelIndex==6)
+		 return true;
+	 else
+		 return false;
   }
   
   private void buildLevelGraphics(Group root)
   {
 		currentLevelGraphics = new LevelGraphics(currentGameState.getFloorPlan(),
 				ZombieConstants.NUM_COLS ,ZombieConstants.NUM_ROWS,currentLevelIndex);
-		
 		root.getChildren().add(currentLevelGraphics);
   }
   
-  private void renderLevel()
-  {
-	  
-  }
+ 
   private void restartLevel()
   {
-	  currentGameState = currentGameStatecopy;
-	  currentGameState.initilizeBackupGame(currentGameState, currentGameStatecopy);
+	  
+	  
+	  //currentGameStatecopy=currentGameState.backupGame(currentGameState);
   }
+  
+  private boolean eaten()
+  {
+	  for(GraphicsZombie zombie : lineZombies)
+	  {
+		//check to see if the zombie co
+	  }
+	  return false;
+  }
+  
+  
+  private void moveGraphicsZombies()
+  {
+	  for(GraphicsZombie lZombie: lineZombies)
+	  {
+		lZombie.headingToRender();
+	  }
+	  
+	  for(GraphicsZombie rZombie: randZombies)
+	  {
+		  rZombie.headingToRender();
+	  }
+	  
+  }
+  private boolean levelbeaten()
+  {
+	  double exitX=currentLevelGraphics.exit.get(0).renderSpaceX;
+	  double exitZ=currentLevelGraphics.exit.get(0).renderSpaceZ;
+	  double xComp= Math.pow(( exitX - player.playerCurX ), 2);
+	  double yComp= Math.pow(( exitZ - player.playerCurZ ), 2);
+	  double distance = Math.sqrt( xComp + yComp );
+	  
+	  
+	  //System.out.println(distance);
+	  if(distance < 150)
+	  {
+		 return true;
+	  }
+	  return false;
+  }
+  
   class MainGameLoop extends AnimationTimer
   {
 	
-	
-	  
-	private void moveZombies()
-	{
-		for(GraphicsZombie zombie : zombies)
-		{
-			// get zombie heading form game state.
-			zombie.translate(1,0);
-			
-		}
-	}
 	
 	
 	
@@ -123,13 +246,28 @@ public class ZombieHouseGameMain extends Application
 	public void handle(long arg0) 
 	{
 		// TODO Auto-generated method stub
-		moveZombies();
 		
+		
+	  if(!endGame())
+	  {
+		  //moveGraphicsZombies();	
+	      if(eaten())
+	      {
+	    	  restartLevel();
+	      }
+		
+		  if(levelbeaten())
+		  { 
+			nextLevel(root);  	  
+		  }
+	  }	
+	  else
+		System.out.println("YOU BEAT THE GAME");	
 	}
   
   }
  
-  public static void main(String args[])
+  public static void main(String[] args)
   {
 	  launch(args);
 	  
