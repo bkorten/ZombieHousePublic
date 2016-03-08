@@ -11,31 +11,40 @@ public class Player
   PerspectiveCamera playerCamera;
   PointLight playerLight;
   Color lightColor= new Color(0.01,0.01,0.01,.01);
-  Rotate xRotate,yRotate;
-  
+  Rotate yRotate;
+  int startRow;
+  int startCol;
+  int oldRow;
+  int oldCol;
+  int curRow;
+  int curCol;
   
   int boundingRadius = 50;
   int boundingHeight = 250;
+  
+  GameState gameState;
+  
   
   double pivotX, pivotZ;
   double playerStartZ,playerStartX,playerOldX,playerOldZ,playerCurZ,playerCurX;
   double nearClip = 0.1;
   double farClip = 1000;
-  double feildOfView = 45;
+  double feildOfView = 35;
   final double playerY=-300;
   
-  public Player(double playerStartX,double playerStartZ)
+  public Player(double playerStartX,double playerStartZ, int startRow,int startCol)
   {
-	  
-	  
-	  
-	  
+	    
 	  this.playerStartZ=playerStartZ;
 	  this.playerStartX=playerStartX;
 	  this.playerCurX=playerStartX;
 	  this.playerCurZ=playerStartZ;
-	  yRotate= new Rotate(0,0,0,0,Rotate.Y_AXIS);
 	  
+	  this.startCol= startCol;
+	  this.startRow=startRow;
+	  
+	  this.curRow= startRow;
+	  this.curCol= startCol;
 	  
 	  
 	  //camera init
@@ -44,19 +53,17 @@ public class Player
 	  this.playerCamera.setTranslateX(playerStartX);
 	  this.playerCamera.setTranslateZ(playerStartZ);
 	  this.playerCamera.setTranslateY(playerY);
-	
+	 
 	  this.playerCamera.setNearClip(nearClip);
 	  this.playerCamera.setFarClip(farClip);
       this.playerCamera.setFieldOfView(feildOfView);
-	  this.playerCamera.getTransforms().add(yRotate);
-	  
+	   
 	  //light init
 	  this.playerLight= new PointLight();
 	  this.playerLight.setColor(lightColor);
 	  this.playerLight.setTranslateX(playerStartX);
 	  this.playerLight.setTranslateZ(playerStartZ);
 	  this.playerLight.setTranslateY(playerY);
-	  this.playerLight.getTransforms().add(yRotate);
 	  
 	  //bounding cylinder
 	  this.boundingCylinder=new Cylinder(boundingRadius,boundingHeight);
@@ -64,22 +71,26 @@ public class Player
 	  this.boundingCylinder.setTranslateY(playerY);
 	  this.boundingCylinder.setTranslateZ(playerStartZ);
 	  
+	  
+	 	  
 	  //setPivots();
   }
   
-  public void rotatePlayer(double rotateAngle)
+  public void setGameState(GameState gameState)
   {
+	  this.gameState=gameState;
 	  
-	  playerCamera.setRotationAxis(Rotate.Y_AXIS);
-	  playerCamera.setRotate(rotateAngle);
+  }
+  public void setRow(int row)
+  {
+	  this.oldRow=this.curRow;
+	  this.curRow =row;
   }
   
-  public void setPivots()
+  public void setCol(int col)
   {
-	 
-	  
-	  this.yRotate.setPivotX(this.playerCurX);
-	  this.yRotate.setPivotZ(this.playerCurZ);
+	  this.oldCol=this.curCol;
+	  this.curCol = col; 
   }
   
   public void translatePlayer(double transX, double transZ)
@@ -87,8 +98,8 @@ public class Player
 	 this.playerOldX =this.playerCurX;
 	 this.playerOldZ =this.playerCurZ;
 	 
-	 this.playerCurX = transX;
-	 this.playerCurZ = transZ;
+	 this.playerCurX += transX;
+	 this.playerCurZ += transZ;
 	 
 	 
 	 this.playerCamera.setTranslateX(playerCurX);
@@ -100,8 +111,58 @@ public class Player
 	 
 	 this.boundingCylinder.setTranslateX(playerCurX);
 	 this.boundingCylinder.setTranslateZ(playerCurZ);
+	
+	  setRow(this.xToj());
+	  setCol(this.yToi());
+	  
+	 gameState.movePlayer(oldRow, oldCol, curRow, curCol);
 	 
 	 
+  }
+  public int xToj()
+  {
+	  int j=0;
+	  
+	  if(this.playerCurX< 0)
+	  {
+		  j= (int) (-this.playerCurX/GraphicsComponent.COMPSIZE);
+	  }
+	  
+	  if(this.playerCurX > 0)
+	  {
+		  j= (int) (this.playerCurX/GraphicsComponent.COMPSIZE);
+	  }
+	  
+	  return j;
+  }
+  
+  public int yToi()
+  {
+	  int i = 0;
+	  
+	  if(this.playerCurZ < 0)
+	  {
+		  i= (int) (-this.playerCurX/GraphicsComponent.COMPSIZE);
+	  }
+	  
+	  if(this.playerCurZ > 0)
+	  {
+		  i= (int) (this.playerCurX/GraphicsComponent.COMPSIZE);
+	  }
+	  
+	  return i;
+  }
+
+  
+  
+  
+  public double getPlayerX()
+  {
+	  return this.playerCurX;
+  }
+  public double getPlayerZ()
+  {
+	  return this.playerCurZ;
   }
   
 }
