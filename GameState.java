@@ -1,9 +1,12 @@
 import java.util.ArrayList;
 import java.util.Random;
-
-import resources.sound.ZombieSoundWorker;
-//James Perry
-//2-18-2016
+/**
+ * This class holds the internal state of the game.
+ * It is instantiated by ZombieHouseGameMain. This class contains methods
+ * necessary for moving zombies, making zombie decisions, triggering sounds
+ * moving the player's position on the floorPlan, instantiating and 
+ * terminating thread worker classes.
+ **/
 public class GameState 
 {
   private ArrayList<RandomZombie> randZombieList = new ArrayList<>();
@@ -11,11 +14,17 @@ public class GameState
   
   private ArrayList<LineZombie> lineZombieList = new ArrayList<>();
   public ArrayList<LineZombie> getLineZombieList(){return this.lineZombieList;}
+  
   private int[][] floorPlan;
   public int[][] getFloorPlan(){return this.floorPlan;}
   
+  //used when a zombie smells the player
   private boolean alertMaster = false;
   
+  private int playerCurrentRow;
+  private int playerCurrentCol;
+  
+  //attributes
   private int playerSight;
   private int playerHearing;
   private double playerSpeed;
@@ -25,11 +34,8 @@ public class GameState
   private double zombieSpeed;
   public double getZombieSpeed(){return this.zombieSpeed;}
   
-  private static double zombieSmell;
-  private static double zombieDecisionRate;
-  
-  private double cameraAngle;
-  public void setCameraAngle(double b){this.cameraAngle = b;}
+  private double zombieSmell;
+  private double zombieDecisionRate;
   
   
   private ZombieSoundWorker step;
@@ -45,17 +51,12 @@ public class GameState
   private int currentLevel;
   public int getCurrentLevel(){return this.currentLevel;}
 
-  private MasterZombie master;
-  
-  private int playerCurrentRow;
-  private int playerCurrentCol;
-  
+  private MasterZombie master;  
   public MasterZombie getMaster(){return this.master;}
   
   private int numRows;
   private int numCols;
   
-    
   private Random rand;
   
   private Graph graph;
@@ -85,14 +86,16 @@ public class GameState
     decisionMaker.setZombieDecisionRate(x);
   }
   
-  
   public void setGameRunning(boolean b)
   {
     decisionMaker.setRunning(b);
     zombieMover.setRunning(b);
   }
 
-  
+  /**
+   * This method terminates the thread workers used to trigger sounds,
+   * move zombies and make zombie decisions.
+   **/
   public void terminateThreads()
   {
     step.setTerminate(true);
@@ -107,13 +110,15 @@ public class GameState
     zombieMover.setTerminate(true);
     while(step.isAlive() || scream.isAlive() || growl1.isAlive()
      || growl2.isAlive() || growl3.isAlive() || growl4.isAlive()
-     || decisionMaker.isAlive())
+     || decisionMaker.isAlive() || zombieMover.isAlive())
     {
       try{Thread.sleep(500);}
       catch(InterruptedException e){}
     } 
   }
-  
+  /**
+   * Initializes the thread worker classes.
+   **/
   public void initializeThreads()
   {
     step = new ZombieSoundWorker("FootStep.wav");
@@ -133,13 +138,15 @@ public class GameState
     growl3.start();
     growl4.start();
     
-    
     decisionMaker.start();
     zombieMover.start();
-    
   }
-  
-  
+  /**
+   * Constructor takes an integer between 1 and 5 inclusive for
+   * the level number. The attributes are set at different values
+   * for each level.
+   * @param level The current level of the game
+  **/
   public GameState(int level)
   {
     LevelGenerator levelGen = new LevelGenerator();
@@ -170,7 +177,7 @@ public class GameState
       playerStamina = 4.0;
       playerRegen = 0.2;
       zombieSpawn = 0.02;
-      zombieSpeed = 0.65;
+      zombieSpeed = 1.25;
       zombieDecisionRate = 2.5;
       zombieSmell = 20.0;
       break;
@@ -181,7 +188,7 @@ public class GameState
       playerStamina = 3.0;
       playerRegen = 0.175;
       zombieSpawn = 0.03;
-      zombieSpeed = 0.75;
+      zombieSpeed = 1.5;
       zombieDecisionRate = 2.5;
       zombieSmell = 25.0;
       break;
@@ -192,7 +199,7 @@ public class GameState
       playerStamina = 2.0;
       playerRegen = 0.175;
       zombieSpawn = 0.04;
-      zombieSpeed = 0.85;
+      zombieSpeed = 1.75;
       zombieDecisionRate = 2.5;
       zombieSmell = 30.0;
       break;
@@ -203,14 +210,14 @@ public class GameState
       playerStamina = 2.0;
       playerRegen = 0.135;
       zombieSpawn = 0.05;
-      zombieSpeed = 1;
+      zombieSpeed = 2;
       zombieDecisionRate = 2.5;
       zombieSmell = 40.0;
       break;
     }
     currentLevel = level;
     int idCounter = 1;
-    
+    //create zombies
     for(int i = 1;i<numRows-1;i++)
     {
       for(int j = 1;j<numCols-1;j++)
@@ -234,7 +241,7 @@ public class GameState
         } 
       }
     }
-    
+    //create master zombie
     int masterStartRow = 0;
     int masterStartCol = 0;
     boolean exitLoop = false;
@@ -256,10 +263,12 @@ public class GameState
         floorPlan[masterStartRow][masterStartCol] = ZombieConstants.MASTER_ZOMBIE;
       }
     }  
-    graph = new Graph(floorPlan);
-    
+    graph = new Graph(floorPlan);   
   }
-  
+  /**
+   * This method is used for debugging purposes.
+   * It prints the floorPlan to the console.
+   */
   public void printFloorPlan()
   {
     for(int i = 0;i<ZombieConstants.NUM_ROWS;i++)
@@ -271,8 +280,10 @@ public class GameState
       System.out.println();
     }
   }
-  
-  
+  /**
+   * This method is called by ZombieDecisionWorker every
+   * zombieDecisionRate seconds.
+  */
   public void makeRandomZombieDecisions()
   {
     int row;
@@ -283,7 +294,7 @@ public class GameState
     {
       row = randZombieList.get(i).getCurrentRow();
       col = randZombieList.get(i).getCurrentCol();
-      
+      //did the zombie smell the player   
       if(graph.euclideanDistance(row, col, playerCurrentRow, playerCurrentCol) <= zombieSmell)
       {
         alertMaster = true;
@@ -293,6 +304,7 @@ public class GameState
           randZombieList.get(i).setCollided(false);
           continue;
         }
+        //get the shortest path to the player
         graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
         newHeadingRow = graph.getHeadingRow();
         newHeadingCol = graph.getHeadingCol();
@@ -303,10 +315,12 @@ public class GameState
       {
         randZombieList.get(i).randomizeHeading();
       } 
-    }
-    
+    }  
   }
-  
+  /**
+   * This method is called by ZombieDecisionWorker 
+   * every zombieDecisionRate seconds.
+  */
   public synchronized void makeLineZombieDecisions()
   {
     int row;
@@ -317,6 +331,7 @@ public class GameState
     {
       row = lineZombieList.get(i).getCurrentRow();
       col = lineZombieList.get(i).getCurrentCol();
+      //did the zombie smell the player?
       if(graph.euclideanDistance(playerCurrentRow, playerCurrentCol, row, col) <= zombieSmell)
       {
         alertMaster = true;
@@ -334,7 +349,10 @@ public class GameState
       }
     } 
   }
-  
+  /**
+   * This method is called by ZombieMoveWorker once every
+   * (1/zombieSpeed) seconds.
+  */
   public void moveLineZombies()
   {
     int row;
@@ -347,6 +365,7 @@ public class GameState
       col = lineZombieList.get(i).getCurrentCol();
       nextRow = row+lineZombieList.get(i).getHeadingRow();
       nextCol = col+lineZombieList.get(i).getHeadingCol();
+      //can the zombie move where it's headed?
       if(floorPlan[nextRow][nextCol] == 0)
       {
         floorPlan[nextRow][nextCol] = ZombieConstants.LINE_ZOMBIE;
@@ -355,6 +374,7 @@ public class GameState
         lineZombieList.get(i).setCurrentRow(nextRow);
         lineZombieList.get(i).setCurrentCol(nextCol);
         graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.LINE_ZOMBIE);
+        //see if the player hears it
         double dist = graph.euclideanDistance(nextRow, nextCol, 
             playerCurrentRow, playerCurrentCol);
             if(dist <= playerHearing)
@@ -369,7 +389,10 @@ public class GameState
     }
   }
   
-  
+  /**
+   * This method is called by ZombieDecisionWorker once every
+   * zombieDecisionRate seconds.
+   */
   public void makeMasterZombieDecision()
   {
     if(alertMaster == false)
@@ -387,7 +410,9 @@ public class GameState
     alertMaster = false;
   }
   
-  
+  /**
+   * This method is called once every 1/zombieSpeed seconds.
+   */
   public void moveMasterZombie()
   {
     int row = master.getCurrentRow();
@@ -404,9 +429,10 @@ public class GameState
       master.setCurrentCol(newCol);
       graph.updatePosition(row, col, newRow, newCol, ZombieConstants.MASTER_ZOMBIE);
     }
-    
   }
-  
+  /**
+   * This method is called once every 1/zombieSpeed seconds.
+   */
   public void moveRandomZombies()
   {
     int row;
@@ -436,7 +462,14 @@ public class GameState
       }
     }   
   }
-  
+  /**
+   * This method is used to move the player position on the floor plan.
+   * @param currentRow The current player position row
+   * @param currentCol The current player position col
+   * @param nextRow The prospective player position row
+   * @param nextCol The prospective player position col
+   * @return true if the player successfully changed position 
+   */
   public boolean movePlayer(int currentRow, int currentCol, int nextRow, int nextCol)
   {
     if(floorPlan[nextRow][nextCol] == ZombieConstants.FLOOR)
@@ -452,7 +485,12 @@ public class GameState
   }
   
   
-  
+  /**
+   * This method is used to make a backup of the current GameState object
+   * in case the player dies.
+   * @param game The current GameState
+   * @param backup The backup GameState
+   */
   public void initializeBackup(GameState game, GameState backup)
   {
     backup.currentLevel = game.currentLevel;
@@ -484,6 +522,10 @@ public class GameState
     backup.getMaster().setCurrentCol(game.getMaster().getCurrentCol());
   }
   
+  /**
+   * This method is used to trigger growl sounds in the zombieSoundWorkers
+   * @param distance Euclidean distance from zombie to player
+  */
   public void playGrowl(double distance)
   {
     int growl = rand.nextInt(4);
@@ -510,24 +552,4 @@ public class GameState
       break;
     }
   }
- 
-  
- 
-  public static void main(String[] args)
-  {
-    GameState game = new GameState(1);
-    
-    game.printFloorPlan();
-    game.initializeThreads();
-    game.setGameRunning(true);
-    game.playGrowl(10);
-    while(true)
-    {
-      game.printFloorPlan();
-      try{Thread.sleep(500);}catch(Exception e){}
-    }
-    //game.terminateThreads();    
-  
-  }
-  
 }
