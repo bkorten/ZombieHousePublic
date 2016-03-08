@@ -1,6 +1,7 @@
 import java.util.ArrayList;
 import java.util.Random;
 
+import resources.sound.ZombieSoundWorker;
 //James Perry
 //2-18-2016
 public class GameState 
@@ -19,7 +20,6 @@ public class GameState
   private int playerHearing;
   private double playerSpeed;
   private double playerStamina;
-  private double maxStamina;
   private double playerRegen;
   private double zombieSpawn;
   private double zombieSpeed;
@@ -55,8 +55,7 @@ public class GameState
   private int numRows;
   private int numCols;
   
-  private boolean isPlayerRunning = false;
-  
+    
   private Random rand;
   
   private Graph graph;
@@ -89,12 +88,9 @@ public class GameState
   
   public void setGameRunning(boolean b)
   {
-    decisionMaker.setRunning(true);
-    zombieMover.setRunning(true);
+    decisionMaker.setRunning(b);
+    zombieMover.setRunning(b);
   }
-  
-
-  
 
   
   public void terminateThreads()
@@ -212,7 +208,6 @@ public class GameState
       zombieSmell = 40.0;
       break;
     }
-    maxStamina = playerStamina;
     currentLevel = level;
     int idCounter = 1;
     
@@ -360,6 +355,12 @@ public class GameState
         lineZombieList.get(i).setCurrentRow(nextRow);
         lineZombieList.get(i).setCurrentCol(nextCol);
         graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.LINE_ZOMBIE);
+        double dist = graph.euclideanDistance(nextRow, nextCol, 
+            playerCurrentRow, playerCurrentCol);
+            if(dist <= playerHearing)
+           {
+             playGrowl(dist);
+           }
       }
       else if(floorPlan[nextRow][nextCol] != 0)
       {
@@ -403,6 +404,7 @@ public class GameState
       master.setCurrentCol(newCol);
       graph.updatePosition(row, col, newRow, newCol, ZombieConstants.MASTER_ZOMBIE);
     }
+    
   }
   
   public void moveRandomZombies()
@@ -425,6 +427,12 @@ public class GameState
         randZombieList.get(i).setCurrentRow(nextRow);
         randZombieList.get(i).setCurrentCol(nextCol);
         graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.RANDOM_ZOMBIE);
+      }
+      double dist = graph.euclideanDistance(nextRow, nextCol, 
+                          playerCurrentRow, playerCurrentCol);
+      if(dist <= playerHearing)
+      {
+        playGrowl(dist);
       }
     }   
   }
@@ -476,21 +484,50 @@ public class GameState
     backup.getMaster().setCurrentCol(game.getMaster().getCurrentCol());
   }
   
+  public void playGrowl(double distance)
+  {
+    int growl = rand.nextInt(4);
+    double loss = (1.0/(double) playerHearing);
+    loss*= distance;
+    double volume = (1.0-loss);
+    switch(growl)
+    {
+      case 0:
+      growl1.setVolume(volume);
+      growl1.setPlay(true);
+      break;
+      case 1:
+      growl1.setVolume(volume);
+      growl1.setPlay(true);
+      break;
+      case 2:
+      growl1.setVolume(volume);
+      growl1.setPlay(true);
+      break;
+      case 3:
+      growl1.setVolume(volume);
+      growl1.setPlay(true);
+      break;
+    }
+  }
  
   
  
   public static void main(String[] args)
   {
     GameState game = new GameState(1);
+    
     game.printFloorPlan();
     game.initializeThreads();
     game.setGameRunning(true);
+    game.playGrowl(10);
     while(true)
     {
       game.printFloorPlan();
       try{Thread.sleep(500);}catch(Exception e){}
     }
     //game.terminateThreads();    
+  
   }
   
 }
