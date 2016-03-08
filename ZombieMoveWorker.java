@@ -1,4 +1,4 @@
-/*
+//**
  * CS 351: Project-Zombie House
  * James Perry
  * This class is used to move all of the
@@ -19,7 +19,8 @@ public class ZombieMoveWorker extends Thread
   private long waitTimeToLong;
 
   private GameState game;
-  /*
+  /**
+   * Constructor takes a reference to a GameState object 
    * @param GameState game The game from which we will grab the zombieSpeed 
    *                       variable and call move methods.
    */
