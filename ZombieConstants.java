@@ -1,5 +1,8 @@
-//James Perry
-//2-18-2016
+/*
+ * James Perry
+ * This class contains constants useful to standardize some of the
+ * values that different classes need to be able to see.
+ */
 public class ZombieConstants 
 {
   public static final int FLOOR = 0;
@@ -14,3 +17,4 @@ public class ZombieConstants
   public static final int NUM_ROWS = (12*4)-2;
   public static final int NUM_COLS = (12*8)-2;
 }
+
