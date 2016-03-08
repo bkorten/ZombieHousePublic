@@ -17,6 +17,18 @@ import javafx.stage.Stage;
 
 
 
+/**
+ * 
+ *
+ */
+/**
+ * @author burton
+ *
+ */
+/**
+ * @author burton
+ *
+ */
 public class ZombieHouseGameMain extends Application 
 {
   private int currentLevelIndex;
@@ -33,17 +45,20 @@ public class ZombieHouseGameMain extends Application
   private GraphicsZombie master;
   private MeshView zombieMeshes = new MeshView();
    
-  public void start(Stage primaryStage)
+  /* (non-Javadoc)
+ * @see javafx.application.Application#start(javafx.stage.Stage)
+ */
+public void start(Stage primaryStage)
   {
 	  
-	primaryStage.setFullScreen(true);  
+	  
 	
 	StlLoader stl = new StlLoader();
     root= new Group();
 	
 	Scene scene = new Scene(root,500,500,true);
 	scene.setFill(Color.BLACK);
-	
+	primaryStage.setFullScreen(true);
 	primaryStage.setTitle("Zombie house");
 	
 	startLevel(root);
@@ -159,7 +174,14 @@ public class ZombieHouseGameMain extends Application
 	  
   }
   
-  private void startLevel(Group root)
+  /**
+ * @param root
+ * 
+ * start level
+ * create gamestate start threads
+ * 
+ */
+private void startLevel(Group root)
   {
 	  currentLevelIndex= 1;
 	  currentGameState = new GameState(currentLevelIndex);
@@ -172,9 +194,18 @@ public class ZombieHouseGameMain extends Application
 
   }
   
-  private void nextLevel(Group root)
+  /**
+   * 
+   * 
+ * @param root
+ * 
+ * adavance gamestate level counter
+ */
+private void nextLevel(Group root)
   {
-
+	  
+    
+    
 	currentLevelIndex++;
     currentGameState = new GameState(currentLevelIndex);
     currentGameState.initializeBackup(currentGameState, currentGameStatecopy);
@@ -187,12 +218,16 @@ public class ZombieHouseGameMain extends Application
     player.playerCamera.setTranslateX(currentLevelGraphics.playerStartX);
     player.playerCamera.setTranslateZ(currentLevelGraphics.playerStartZ);
     addZombies(root);
-    
+    currentGameState.initializeThreads();
     
     
     
   }
-  private boolean endGame()
+  /**
+   * check if level index is greater that 6
+ * @return
+ */
+private boolean endGame()
   {
 	 if(currentLevelIndex==6)
 		 return true;
@@ -200,15 +235,20 @@ public class ZombieHouseGameMain extends Application
 		 return false;
   }
   
-  private void buildLevelGraphics(Group root)
+  /**
+   * create level graphics
+   *  
+ * @param root
+ */
+private void buildLevelGraphics(Group root)
   {
 		currentLevelGraphics = new LevelGraphics(currentGameState.getFloorPlan(),
 				ZombieConstants.NUM_COLS ,ZombieConstants.NUM_ROWS,currentLevelIndex);
 		root.getChildren().add(currentLevelGraphics);
   }
   
- 
-  private void restartLevel()
+
+ private void restartLevel()
   {
 	  
 	    player.playerCamera.setTranslateX(currentLevelGraphics.playerStartX);
@@ -217,7 +257,10 @@ public class ZombieHouseGameMain extends Application
 	 
   }
   
-  private boolean eaten()
+  /**
+ * @return
+ */
+private boolean eaten()
   {
 	  
 	  int i=0;
@@ -280,7 +323,7 @@ public class ZombieHouseGameMain extends Application
 	  
 	  
 	  //System.out.println(distance);
-	  if(distance < 300)
+	  if(distance < 500)
 	  {
 		 return true;
 	  }
