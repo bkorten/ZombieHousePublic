@@ -6,7 +6,8 @@ public class Graph
 {
   private Tile[][] graph;
   private int[] heading = new int[2];
-  public int[] getHeading(){return this.heading;}
+  public int getHeadingRow(){return this.heading[0];}
+  public int getHeadingCol(){return this.heading[1];}
   
   public void updatePosition(int prevRow, int prevCol, int newRow, int newCol, int value)
   {
@@ -31,7 +32,8 @@ public class Graph
     double colDistance = col2-col1;
     rowDistance = Math.pow(rowDistance, 2);
     colDistance = Math.pow(colDistance, 2);
-    return Math.sqrt((rowDistance+colDistance));
+    double distance = rowDistance+colDistance;
+    return Math.sqrt(distance);
   }
   
   public void printGraph()
@@ -54,7 +56,6 @@ public class Graph
     Tile start = graph[startRow][startCol];
     while(!(tmp.equalsTile(start)))
     {
-      tmp.setType(3);
       if(tmp.getPrevious().equalsTile(start)) break;
       tmp = tmp.getPrevious();
     };
@@ -90,16 +91,12 @@ public class Graph
       current = frontier.poll();
       Iterator<Tile> it = frontier.iterator();
       Tile tmp;
-      
-      
       closedList.add(current);
       if(current.equalsTile(graph[goalRow][goalCol])) 
       {
         graph[goalRow][goalCol].setPrevious(current);
         graph[startRow][startCol].setPrevious(null);
         reconstructPath(startRow,startCol,goalRow,goalCol);
-        graph[goalRow][goalCol].setType(1);
-        printGraph();
         return;
       }
       
@@ -108,21 +105,20 @@ public class Graph
       for(int i = 0;i<neighbors.size();i++)
       {
         adj = neighbors.get(i);
-        if(adj.getType() == ZombieConstants.WALL) continue;
+        if(adj.getType() == ZombieConstants.WALL ||
+           adj.getType() == ZombieConstants.LINE_ZOMBIE) continue;
         newGScore = current.getGValue()+adj.getType()+1;
         if(adj.equalsTile(graph[goalRow][goalCol]))
         {
           adj.setPrevious(current);
           reconstructPath(startRow,startCol,goalRow,goalCol);
-          printGraph();
           return;
         }
         
         if(closedList.contains(adj) && newGScore > adj.getGValue()) continue;
         
         else if(!(frontier.contains(adj)) || newGScore<adj.getGValue())
-        { 
-          
+        {       
           newHScore = euclideanDistance(adj.getRow(),adj.getCol(),goalRow,goalCol);
           adj.setFValue(newGScore+newHScore);
           adj.setGValue(newGScore);
@@ -142,7 +138,6 @@ public class Graph
             adj.setPrevious(current);
           }
         }  
-        
       }  
       
     }
@@ -156,14 +151,21 @@ public class Graph
     {
       for(int j = 0;j<ZombieConstants.NUM_COLS;j++)
       {
+        System.out.println(floorPlan[i][j]);
         graph[i][j] = new Tile(i,j,floorPlan[i][j]);
       }
     }
   }
+  
   public static void main(String[] args)
   {
-    LevelGenerator l = new LevelGenerator();
-    Graph g = new Graph(l.getGraph());
+    GameState g = new GameState(1);
+   
+    Graph h = new Graph(g.getFloorPlan());
+    h.printGraph();
+    
   }
+  
+  
   
 }
