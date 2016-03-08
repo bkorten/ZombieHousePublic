@@ -1,7 +1,6 @@
 import java.util.ArrayList;
 import java.util.Random;
 
-import resources.sound.ZombieSoundWorker;
 //James Perry
 //2-18-2016
 public class GameState 
@@ -50,6 +49,9 @@ public class GameState
   
   private int playerCurrentRow;
   private int playerCurrentCol;
+  
+  public MasterZombie getMaster(){return this.master;}
+  
   private int numRows;
   private int numCols;
   
@@ -59,7 +61,7 @@ public class GameState
   
   private Graph graph;
   
-  public synchronized void setPlayerSight(int sight){this.playerSight = sight;}
+  public void setPlayerSight(int sight){this.playerSight = sight;}
   public int getPlayerSight(){return this.playerSight;}
   
   public synchronized void setPlayerHearing(int hear){this.playerHearing = hear;}
@@ -162,8 +164,8 @@ public class GameState
       playerRegen = 0.2;
       zombieSpawn = 0.01;
       zombieSpeed = 1.0;
-      zombieDecisionRate = 1.0;
-      zombieSmell = 1500.0;
+      zombieDecisionRate = 2.0;
+      zombieSmell = 15.0;
       break;
       case 2:
       playerSight = 5;
@@ -289,6 +291,7 @@ public class GameState
       
       if(graph.euclideanDistance(row, col, playerCurrentRow, playerCurrentCol) <= zombieSmell)
       {
+        alertMaster = true;
         if(randZombieList.get(i).getCollided() == true)
         {
           randZombieList.get(i).randomizeHeading();
@@ -296,7 +299,6 @@ public class GameState
           continue;
         }
         graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
-        System.out.println("MA");
         newHeadingRow = graph.getHeadingRow();
         newHeadingCol = graph.getHeadingCol();
         randZombieList.get(i).setHeadingRow(newHeadingRow);
@@ -322,19 +324,7 @@ public class GameState
       col = lineZombieList.get(i).getCurrentCol();
       if(graph.euclideanDistance(playerCurrentRow, playerCurrentCol, row, col) <= zombieSmell)
       {
-        if(randZombieList.get(i).getCollided() == true)
-        {
-          int prevHeadingRow = lineZombieList.get(i).getHeadingRow();
-          int prevHeadingCol = lineZombieList.get(i).getHeadingCol();
-          lineZombieList.get(i).randomizeHeading();
-          while(prevHeadingRow == randZombieList.get(i).getHeadingRow() &&
-                prevHeadingCol == randZombieList.get(i).getHeadingCol())
-          {
-            randZombieList.get(i).randomizeHeading();
-          }
-          lineZombieList.get(i).setCollided(false);
-          continue;
-        }
+        alertMaster = true;
         graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
         newHeadingRow = graph.getHeadingRow();
         newHeadingCol = graph.getHeadingCol();
@@ -350,36 +340,72 @@ public class GameState
     } 
   }
   
-  public void makeMasterZombieDecision()
+  public void moveLineZombies()
   {
-    boolean alertMaster = false;
     int row;
     int col;
-    int newHeadingRow;
-    int newHeadingCol;
-    row = master.getCurrentRow();
-    col = master.getCurrentCol();
-    if(master.getCollided() == true)
+    int nextRow;
+    int nextCol;
+    for(int i = 0;i<lineZombieList.size();i++)
     {
-      int prevHeadingRow = master.getHeadingRow();
-      int prevHeadingCol = master.getHeadingCol();
-      master.randomizeHeading();
+      row = lineZombieList.get(i).getCurrentRow();
+      col = lineZombieList.get(i).getCurrentCol();
+      nextRow = row+lineZombieList.get(i).getHeadingRow();
+      nextCol = col+lineZombieList.get(i).getHeadingCol();
+      if(floorPlan[nextRow][nextCol] == 0)
+      {
+        floorPlan[nextRow][nextCol] = ZombieConstants.LINE_ZOMBIE;
+        floorPlan[row][col] = 0;
+        lineZombieList.get(i).setCollided(false);
+        lineZombieList.get(i).setCurrentRow(nextRow);
+        lineZombieList.get(i).setCurrentCol(nextCol);
+        graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.LINE_ZOMBIE);
+      }
+      else if(floorPlan[nextRow][nextCol] != 0)
+      {
+        lineZombieList.get(i).setCollided(true); 
+      }
     }
-    else if(alertMaster == true || 
-            graph.euclideanDistance(playerCurrentRow, playerCurrentCol, row, col)
-            <= zombieSmell)
-    {
-      graph.pathFinding(row, col, playerCurrentRow, playerCurrentCol);
-      newHeadingRow = graph.getHeadingRow();
-      newHeadingCol = graph.getHeadingCol();
-      master.setHeadingRow(newHeadingRow);
-      master.setHeadingCol(newHeadingCol);
-    }
-    
   }
   
   
-  public void moveZombies()
+  public void makeMasterZombieDecision()
+  {
+    if(alertMaster == false)
+    {
+      master.randomizeHeading();
+      return;
+    }
+    int row = master.getCurrentRow();
+    int col = master.getCurrentCol();
+    int goalRow = playerCurrentRow;
+    int goalCol = playerCurrentCol;
+    graph.pathFinding(row, col, goalRow, goalCol);
+    master.setHeadingRow(graph.getHeadingRow());
+    master.setHeadingCol(graph.getHeadingCol());
+    alertMaster = false;
+  }
+  
+  
+  public void moveMasterZombie()
+  {
+    int row = master.getCurrentRow();
+    int col = master.getCurrentCol();
+    int headingRow = master.getHeadingRow();
+    int headingCol = master.getHeadingCol();
+    int newRow = row+headingRow;
+    int newCol = col+headingCol;
+    if(floorPlan[newRow][newCol] == 0)
+    {
+      floorPlan[newRow][newCol] = ZombieConstants.MASTER_ZOMBIE;
+      floorPlan[row][col] = 0;
+      master.setCurrentRow(newRow);
+      master.setCurrentCol(newCol);
+      graph.updatePosition(row, col, newRow, newCol, ZombieConstants.MASTER_ZOMBIE);
+    }
+  }
+  
+  public void moveRandomZombies()
   {
     int row;
     int col;
@@ -400,72 +426,24 @@ public class GameState
         randZombieList.get(i).setCurrentCol(nextCol);
         graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.RANDOM_ZOMBIE);
       }
-    }
-    
-    for(int i = 0;i<lineZombieList.size();i++)
-    {
-      row = lineZombieList.get(i).getCurrentRow();
-      col = lineZombieList.get(i).getCurrentCol();
-      nextRow = row+lineZombieList.get(i).getHeadingRow();
-      nextCol = col+lineZombieList.get(i).getHeadingCol();
-      if(floorPlan[nextRow][nextCol] == 0)
-      {
-        floorPlan[nextRow][nextCol] = ZombieConstants.LINE_ZOMBIE;
-        floorPlan[row][col] = 0;
-        lineZombieList.get(i).setCollided(false);
-        lineZombieList.get(i).setCurrentRow(nextRow);
-        lineZombieList.get(i).setCurrentCol(nextCol);
-        graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.LINE_ZOMBIE);
-      }
-      else if(floorPlan[nextRow][nextCol] != 0 
-           && floorPlan[nextRow][nextCol] != ZombieConstants.PLAYER)
-      {
-        lineZombieList.get(i).setCollided(true); 
-      }
-    }
-    
-    row = master.getCurrentRow();
-    col = master.getCurrentCol();
-    nextRow = row+master.getHeadingRow();
-    nextCol = col+master.getHeadingCol();
-    if(floorPlan[nextRow][nextCol] == 0)
-    {
-      floorPlan[nextRow][nextCol] = ZombieConstants.MASTER_ZOMBIE;
-      floorPlan[row][col] = 0;
-      master.setCurrentRow(nextRow);
-      master.setCurrentCol(nextCol);
-      master.setCollided(false);
-      graph.updatePosition(row, col, nextRow, nextCol, ZombieConstants.MASTER_ZOMBIE);
-    }
-    else if(floorPlan[nextRow][nextCol] != 0 &&
-            floorPlan[nextRow][nextCol] != ZombieConstants.PLAYER)
-    {
-      master.setCollided(true);
-    }
+    }   
   }
-  public void movePlayer(int currentRow, int currentCol, int nextRow, int nextCol)
+  
+  public boolean movePlayer(int currentRow, int currentCol, int nextRow, int nextCol)
   {
     if(floorPlan[nextRow][nextCol] == ZombieConstants.FLOOR)
     {
       floorPlan[nextRow][nextCol] = ZombieConstants.PLAYER;
       floorPlan[currentRow][currentCol] = ZombieConstants.FLOOR;
       graph.updatePosition(currentRow, currentCol, 
-                           nextRow,    nextCol, 
+                              nextRow,    nextCol, 
                            ZombieConstants.PLAYER);
+      return true;
     }
+    return false;
   }
   
-  public void adjustPlayerStamina()
-  {
-    if(isPlayerRunning == true)
-    {
-      playerStamina--;
-    } 
-    else if(isPlayerRunning == false)
-    {
-      if(playerStamina<maxStamina) playerStamina++;
-    }
-  }
+  
   
   public void initializeBackup(GameState game, GameState backup)
   {
@@ -477,6 +455,25 @@ public class GameState
         backup.floorPlan[i][j] = game.floorPlan[i][j];
       }
     }
+    backup.getLineZombieList().clear();
+    for(int i = 0;i<game.getLineZombieList().size();i++)
+    {
+      backup.getLineZombieList().add
+      (new LineZombie(game.getLineZombieList().get(i).getCurrentRow(),
+                        game.getLineZombieList().get(i).getCurrentCol(),
+                        game.getLineZombieList().get(i).getGraphicsID()));
+    }
+    
+    backup.getRandZombieList().clear();
+    for(int i = 0;i<game.getRandZombieList().size();i++)
+    {
+      backup.getRandZombieList().add
+      (new RandomZombie(game.getRandZombieList().get(i).getCurrentRow(),
+                        game.getRandZombieList().get(i).getCurrentCol(),
+                        game.getRandZombieList().get(i).getGraphicsID()));
+    }
+    backup.getMaster().setCurrentRow(game.getMaster().getCurrentRow());
+    backup.getMaster().setCurrentCol(game.getMaster().getCurrentCol());
   }
   
  
@@ -487,23 +484,13 @@ public class GameState
     GameState game = new GameState(1);
     game.printFloorPlan();
     game.initializeThreads();
-    try{Thread.sleep(500);} catch(InterruptedException e){}
     game.setGameRunning(true);
-    System.out.println(game.master.getCurrentRow());
-    System.out.println(game.master.getCurrentCol());
     while(true)
     {
       game.printFloorPlan();
-      try{Thread.sleep(1000);
-          
-          game.printFloorPlan();}
-      catch(InterruptedException e){}
+      try{Thread.sleep(500);}catch(Exception e){}
     }
-    //game.terminateThreads();
-    
-    
-    
-    
+    //game.terminateThreads();    
   }
   
 }
