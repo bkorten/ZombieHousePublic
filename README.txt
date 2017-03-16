@@ -1,7 +1,7 @@
 # ZombieHouse
 ZombieHouse is the first group project for CS 351. This repository is the implementation by the "noobs" group, James Perry and Burton Korten. Thien dropped the class, so all of his points are to be distributed to James and Burt, preferibly with a hefty amount of extra credit for the added emotional and physical trauma.
 
-James was in charge of everything related to the internal computations, and Burt was in charge of everything related to 3D rendering.
+James was in charge of everything related to the internal computations, and Burton was responsible for the graphic and control components of this game. 
 
 CLASS DESCRIPTIONS:
 
@@ -27,6 +27,16 @@ Floor.java(Burton Korten)
 LevelGraphics.java (Burton Korten)
 -This class creates a group that contains all the static graphics for a level.  this includes walls obstacles firetraps and the exit
 
+Controller.java
+-This class is the controller for the player.  It processes input from the mouse and keyboard and passes it to the Player class. 
+
+LevelGraphics.java
+-This class creates the 3D level by parsing the 2d map made by the level generator class. 
+Player.java
+-This class contains the camera and and light and interfaces with the Controller class. 
+
+StlLoader.java
+-This class loads and renders the 3D models for the zombies using predefined methods. 
 
 
 
